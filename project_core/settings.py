@@ -11,10 +11,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 from pathlib import Path
+from passwords import db_password
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -26,7 +26,6 @@ SECRET_KEY = 'django-insecure-)%222i2#z%3f=l^+@kcmjeotfz=7#_7lmnl-@t+20e&$1gxixb
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -68,21 +67,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'project_core.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'comunication_ltd_db',     # The database name you created
-        'USER': 'root',                     # Your MySQL username (default is root)
-        'PASSWORD': 'CommPro!88',   # <-- PUT YOUR ROOT PASSWORD HERE
-        'HOST': 'localhost',                # It's running on your computer
-        'PORT': '3306',                     # The default MySQL port
+        'NAME': 'comunication_ltd_db',  # The database name you created
+        'USER': 'root',  # Your MySQL username (default is root)
+        'PASSWORD': db_password,  # <-- PUT YOUR ROOT PASSWORD HERE
+        'HOST': 'localhost',  # It's running on your computer
+        'PORT': '3306',  # The default MySQL port
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -102,7 +99,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -113,7 +109,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
