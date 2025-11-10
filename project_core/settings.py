@@ -74,8 +74,12 @@ WSGI_APPLICATION = 'project_core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'comunication_ltd_db',     # The database name you created
+        'USER': 'root',                     # Your MySQL username (default is root)
+        'PASSWORD': 'CommPro!88',   # <-- PUT YOUR ROOT PASSWORD HERE
+        'HOST': 'localhost',                # It's running on your computer
+        'PORT': '3306',                     # The default MySQL port
     }
 }
 
