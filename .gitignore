@@ -59,7 +59,9 @@ cover/
 *.log
 local_settings.py
 db.sqlite3-journal
-project_core/passwords.py
+project_core/secrets.py
+password_config.json
+passwords_dictionary.txt
 
 # Add these lines:
 staticfiles/
