@@ -14,4 +14,4 @@ We are building a full-stack web application for a fictional ISP, "Comunication_
 
 * Hashing: PBKDF2, SHA-1
 
-* Security: CSRF Protection, Custom Password Validation, Login Attempt-Limiting
+* Security: CSRF Protection, Custom Password Validation, Login Attempt-Limiting, SQL Injection, XSS
