@@ -4,15 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comunication_LTD - Authentication</title>
-    <!-- 1. Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- 2. Load the 'Inter' font (clean and modern) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-    <!-- 3. Custom styles to match your design -->
+
     <style>
         /* Use Inter as the default font */
         body {
@@ -50,29 +48,21 @@
 </head>
 <body class="bg-[#111827] text-gray-300 min-h-screen flex items-center justify-center p-4">
 
-<!-- Main container matching your design width -->
 <div class="w-full max-w-sm">
 
-    <!-- Header: Login | Register Tabs -->
     <nav class="flex text-2xl font-light space-x-4">
-        <!-- Login Tab (Active by default) -->
         <button id="login-tab" class="tab-active transition-colors duration-200">
             Login
         </button>
         <span class="text-gray-600">|</span>
-        <!-- Register Tab -->
         <button id="register-tab" class="text-gray-500 hover:text-gray-300 transition-colors duration-200">
             Register
         </button>
     </nav>
 
-    <!-- Purple divider line -->
     <div class="h-px mt-2 mb-12" style="background-color: #AD8BE9;"></div>
 
-    <!--
-      CHANGE 1: Add the error/success message block.
-      This will show all the validation errors from views.py.
-    -->
+
     {% if messages %}
     <div class="mb-6 space-y-2">
         {% for message in messages %}
@@ -82,12 +72,7 @@
         {% endfor %}
     </div>
     {% endif %}
-    <!-- End of Change 1 -->
 
-    <!-- Login Form (Visible by default) -->
-    <!--
-      CHANGE 2: Update form action and add a name to the button.
-    -->
     <form id="login-form" method="POST" action="{% url 'auth_page' %}">
         {% csrf_token %}
         <h2 class="text-3xl font-light mb-8" style="color: #DCDFF0;">Please Log in</h2>
@@ -117,8 +102,6 @@
         </button>
     </form>
 
-    <!-- Register Form (Hidden by default) -->
-    <!-- I've added "Confirm Password" as it's good practice and implied by your project reqs -->
     <form id="register-form" method="POST" action="{% url 'auth_page' %}" class="hidden">
         {% csrf_token %}
         <h2 class="text-3xl font-light mb-8" style="color: #DCDFF0;">Please Register</h2>
@@ -183,40 +166,43 @@
 
 </div>
 
-<!-- 4. JavaScript for Tab Toggling -->
 <script>
     const loginTab = document.getElementById('login-tab');
     const registerTab = document.getElementById('register-tab');
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
 
-    // Add click event for Login Tab
-    loginTab.addEventListener('click', () => {
+    function switchToLogin() {
         // Show login form, hide register form
         loginForm.classList.remove('hidden');
         registerForm.classList.add('hidden');
 
-        // Set active tab style
+        // LOGIN TAB: Active State
         loginTab.classList.add('tab-active');
-        loginTab.classList.remove('text-gray-500');
-        // Set inactive tab style
-        registerTab.classList.remove('tab-active');
-        registerTab.classList.add('text-gray-500');
-    });
+        loginTab.classList.remove('text-gray-500', 'hover:text-gray-300'); // Remove hover effect when active
 
-    // Add click event for Register Tab
-    registerTab.addEventListener('click', () => {
+        // REGISTER TAB: Inactive State
+        registerTab.classList.remove('tab-active');
+        registerTab.classList.add('text-gray-500', 'hover:text-gray-300'); // Add hover effect, so it lights up
+    }
+
+    function switchToRegister() {
         // Show register form, hide login form
         registerForm.classList.remove('hidden');
         loginForm.classList.add('hidden');
 
-        // Set active tab style
+        // REGISTER TAB: Active State
         registerTab.classList.add('tab-active');
-        registerTab.classList.remove('text-gray-500');
-        // Set inactive tab style
+        registerTab.classList.remove('text-gray-500', 'hover:text-gray-300');
+
+        // LOGIN TAB: Inactive State
         loginTab.classList.remove('tab-active');
-        loginTab.classList.add('text-gray-500');
-    });
+        loginTab.classList.add('text-gray-500', 'hover:text-gray-300'); // This fixes your issue
+    }
+
+    // Add click event listeners
+    loginTab.addEventListener('click', switchToLogin);
+    registerTab.addEventListener('click', switchToRegister);
 
     const pwdInput = document.getElementById("reg-password");
 
@@ -285,16 +271,7 @@
     */
 
     {% if show_register %}
-        // Show register form, hide login form
-        registerForm.classList.remove('hidden');
-        loginForm.classList.add('hidden');
-
-        // Set active tab style
-        registerTab.classList.add('tab-active');
-        registerTab.classList.remove('text-gray-500');
-        // Set inactive tab style
-        loginTab.classList.remove('tab-active');
-        loginTab.classList.add('text-gray-500');
+       switchToRegister();
     {% endif %}
 
 </script>
