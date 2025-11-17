@@ -14,7 +14,6 @@
 
     <!-- 3. Custom styles to match your design -->
     <style>
-
         /* Use Inter as the default font */
         body {
             font-family: 'Inter', sans-serif;
@@ -30,7 +29,7 @@
             width: 100%;
             padding-top: 0.5rem;
             padding-bottom: 0.5rem;
-            color: #DCDFF0;
+            color: #DCDFF0; /* gray-300 */
             transition: border-color 0.2s ease-in-out;
         }
 
@@ -68,10 +67,30 @@
         </nav>
 
         <!-- Purple divider line -->
-        <div class="h-px mt-2 mb-12" style="background-color: #AD8BE9;"></div>
-        <!-- Login Form (Visible by default) -->
-        <form id="login-form" action="#" method="POST">
-            <h2 class="text-3xl font-light mb-8" style="color: #DCDFF0;">Please Log in</h2>
+    <div class="h-px mt-2 mb-12" style="background-color: #AD8BE9;"></div>
+
+    <!--
+      CHANGE 1: Add the error/success message block.
+      This will show all the validation errors from views.py.
+    -->
+    {% if messages %}
+    <div class="mb-6 space-y-2">
+        {% for message in messages %}
+        <div class="{% if message.tags == 'error' %}bg-red-800 text-red-100{% else %}bg-green-800 text-green-100{% endif %} p-3 rounded-lg text-sm font-medium">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <!-- End of Change 1 -->
+
+    <!-- Login Form (Visible by default) -->
+    <!--
+      CHANGE 2: Update form action and add a name to the button.
+    -->
+    <form id="login-form" method="POST" action="{% url 'auth_page' %}">
+        {% csrf_token %}
+        <h2 class="text-3xl font-light mb-8" style="color: #DCDFF0;">Please Log in</h2>
 
             <!-- Username Field -->
             <div class="mb-6">
@@ -91,15 +110,18 @@
             </div>
 
             <!-- Login Button -->
-            <button type="submit" class="w-full py-2.5 px-4 border border-gray-500 rounded-full text-gray-300 font-medium hover:bg-gray-800 hover:border-gray-700 transition-all duration-200">
-                Login
-            </button>
-        </form>
+        <button type="submit"
+                name="login_form"
+                class="w-full py-2.5 px-4 border border-gray-500 rounded-full text-gray-300 font-medium hover:bg-gray-800 hover:border-gray-700 transition-all duration-200">
+            Login
+        </button>
+    </form>
 
-        <!-- Register Form (Hidden by default) -->
-        <!-- I've added "Confirm Password" as it's good practice and implied by your project reqs -->
-        <form id="register-form" action="#" method="POST" class="hidden">
-            <h2 class="text-3xl font-light mb-8" style="color: #DCDFF0;">Please Register</h2>
+    <!-- Register Form (Hidden by default) -->
+    <!-- I've added "Confirm Password" as it's good practice and implied by your project reqs -->
+    <form id="register-form" method="POST" action="{% url 'auth_page' %}" class="hidden">
+        {% csrf_token %}
+        <h2 class="text-3xl font-light mb-8" style="color: #DCDFF0;">Please Register</h2>
 
             <!-- Username Field -->
             <div class="mb-6">
@@ -126,49 +148,70 @@
             </div>
 
             <!-- Register Button -->
-            <button type="submit" class="w-full py-2.5 px-4 border border-gray-500 rounded-full text-gray-300 font-medium hover:bg-gray-800 hover:border-gray-700 transition-all duration-200">
-                Register
-            </button>
-        </form>
+        <button type="submit"
+                name="register_form"
+                class="w-full py-2.5 px-4 border border-gray-500 rounded-full text-gray-300 font-medium hover:bg-gray-800 hover:border-gray-700 transition-all duration-200">
+            Register
+        </button>
+    </form>
 
     </div>
 
     <!-- 4. JavaScript for Tab Toggling -->
     <script>
-        // Get all the elements we need
-        const loginTab = document.getElementById('login-tab');
-        const registerTab = document.getElementById('register-tab');
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
+    const loginTab = document.getElementById('login-tab');
+    const registerTab = document.getElementById('register-tab');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
 
-        // Add click event for Login Tab
-        loginTab.addEventListener('click', () => {
-            // Show login form, hide register form
-            loginForm.classList.remove('hidden');
-            registerForm.classList.add('hidden');
+    // Add click event for Login Tab
+    loginTab.addEventListener('click', () => {
+        // Show login form, hide register form
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
 
-            // Set active tab style
-            loginTab.classList.add('tab-active');
-            loginTab.classList.remove('text-gray-500');
-            // Set inactive tab style
-            registerTab.classList.remove('tab-active');
-            registerTab.classList.add('text-gray-500');
-        });
+        // Set active tab style
+        loginTab.classList.add('tab-active');
+        loginTab.classList.remove('text-gray-500');
+        // Set inactive tab style
+        registerTab.classList.remove('tab-active');
+        registerTab.classList.add('text-gray-500');
+    });
 
-        // Add click event for Register Tab
-        registerTab.addEventListener('click', () => {
-            // Show register form, hide login form
-            registerForm.classList.remove('hidden');
-            loginForm.classList.add('hidden');
+    // Add click event for Register Tab
+    registerTab.addEventListener('click', () => {
+        // Show register form, hide login form
+        registerForm.classList.remove('hidden');
+        loginForm.classList.add('hidden');
 
-            // Set active tab style
-            registerTab.classList.add('tab-active');
-            registerTab.classList.remove('text-gray-500');
-            // Set inactive tab style
-            loginTab.classList.remove('tab-active');
-            loginTab.classList.add('text-gray-500');
-        });
-    </script>
+        // Set active tab style
+        registerTab.classList.add('tab-active');
+        registerTab.classList.remove('text-gray-500');
+        // Set inactive tab style
+        loginTab.classList.remove('tab-active');
+        loginTab.classList.add('text-gray-500');
+    });
+
+    /*
+      This code runs when the page reloads.
+      It checks if views.py set the 'show_register' flag to True.
+      If it did, it manually switches to the register tab.
+    */
+
+    {% if show_register %}
+        // Show register form, hide login form
+        registerForm.classList.remove('hidden');
+        loginForm.classList.add('hidden');
+
+        // Set active tab style
+        registerTab.classList.add('tab-active');
+        registerTab.classList.remove('text-gray-500');
+        // Set inactive tab style
+        loginTab.classList.remove('tab-active');
+        loginTab.classList.add('text-gray-500');
+    {% endif %}
+
+</script>
 
 </body>
 </html>
