@@ -50,23 +50,23 @@
 </head>
 <body class="bg-[#111827] text-gray-300 min-h-screen flex items-center justify-center p-4">
 
-    <!-- Main container matching your design width -->
-    <div class="w-full max-w-sm">
+<!-- Main container matching your design width -->
+<div class="w-full max-w-sm">
 
-        <!-- Header: Login | Register Tabs -->
-        <nav class="flex text-2xl font-light space-x-4">
-            <!-- Login Tab (Active by default) -->
-            <button id="login-tab" class="tab-active transition-colors duration-200">
-                Login
-            </button>
-            <span class="text-gray-600">|</span>
-            <!-- Register Tab -->
-            <button id="register-tab" class="text-gray-500 hover:text-gray-300 transition-colors duration-200">
-                Register
-            </button>
-        </nav>
+    <!-- Header: Login | Register Tabs -->
+    <nav class="flex text-2xl font-light space-x-4">
+        <!-- Login Tab (Active by default) -->
+        <button id="login-tab" class="tab-active transition-colors duration-200">
+            Login
+        </button>
+        <span class="text-gray-600">|</span>
+        <!-- Register Tab -->
+        <button id="register-tab" class="text-gray-500 hover:text-gray-300 transition-colors duration-200">
+            Register
+        </button>
+    </nav>
 
-        <!-- Purple divider line -->
+    <!-- Purple divider line -->
     <div class="h-px mt-2 mb-12" style="background-color: #AD8BE9;"></div>
 
     <!--
@@ -92,24 +92,24 @@
         {% csrf_token %}
         <h2 class="text-3xl font-light mb-8" style="color: #DCDFF0;">Please Log in</h2>
 
-            <!-- Username Field -->
-            <div class="mb-6">
-                <label for="login-username" class="block text-sm font-light text-gray-400">Username</label>
-                <input type="text" id="login-username" name="username" class="form-input">
-            </div>
+        <!-- Username Field -->
+        <div class="mb-6">
+            <label for="login-username" class="block text-sm font-light text-gray-400">Username</label>
+            <input type="text" id="login-username" name="username" class="form-input">
+        </div>
 
-            <!-- Password Field -->
-            <div class="mb-4">
-                <label for="login-password" class="block text-sm font-light text-gray-400">Password</label>
-                <input type="password" id="login-password" name="password" class="form-input">
-            </div>
+        <!-- Password Field -->
+        <div class="mb-4">
+            <label for="login-password" class="block text-sm font-light text-gray-400">Password</label>
+            <input type="password" id="login-password" name="password" class="form-input">
+        </div>
 
-            <!-- Forgot Password Link -->
-            <div class="text-right mb-8">
-                <a href="#" class="text-sm hover:underline" style="color: #AD8BE9;">Forgot Password?</a>
-            </div>
+        <!-- Forgot Password Link -->
+        <div class="text-right mb-8">
+            <a href="#" class="text-sm hover:underline" style="color: #AD8BE9;">Forgot Password?</a>
+        </div>
 
-            <!-- Login Button -->
+        <!-- Login Button -->
         <button type="submit"
                 name="login_form"
                 class="w-full py-2.5 px-4 border border-gray-500 rounded-full text-gray-300 font-medium hover:bg-gray-800 hover:border-gray-700 transition-all duration-200">
@@ -123,42 +123,68 @@
         {% csrf_token %}
         <h2 class="text-3xl font-light mb-8" style="color: #DCDFF0;">Please Register</h2>
 
-            <!-- Username Field -->
-            <div class="mb-6">
-                <label for="reg-username" class="block text-sm font-light text-gray-400">Username</label>
-                <input type="text" id="reg-username" name="username" class="form-input">
-            </div>
+        <!-- Username Field -->
+        <div class="mb-6">
+            <label for="reg-username" class="block text-sm font-light text-gray-400">Username</label>
+            <input type="text" id="reg-username" name="username" class="form-input">
+        </div>
 
-            <!-- Email Field -->
-            <div class="mb-6">
-                <label for="reg-email" class="block text-sm font-light text-gray-400">Email</label>
-                <input type="email" id="reg-email" name="email" class="form-input">
-            </div>
+        <!-- Email Field -->
+        <div class="mb-6">
+            <label for="reg-email" class="block text-sm font-light text-gray-400">Email</label>
+            <input type="email" id="reg-email" name="email" class="form-input">
+        </div>
 
-            <!-- Password Field -->
-            <div class="mb-6">
-                <label for="reg-password" class="block text-sm font-light text-gray-400">Password</label>
-                <input type="password" id="reg-password" name="password" class="form-input">
-            </div>
+        <!-- Password Field -->
+        <div class="mb-6">
+            <label for="reg-password" class="block text-sm font-light text-gray-400">Password</label>
+            <input type="password" id="reg-password" name="password" class="form-input">
+        </div>
+        <!-- Password Requirements -->
+        <ul id="password-rules" class="text-sm space-y-1 mt-6 mb-6">
 
-            <!-- Confirm Password Field -->
-            <div class="mb-8">
-                <label for="reg-confirm-password" class="block text-sm font-light text-gray-400">Confirm Password</label>
-                <input type="password" id="reg-confirm-password" name="password_confirm" class="form-input">
-            </div>
+            <li id="rule-length" data-text="At least 10 characters" class="flex items-center text-red-400">
+                ✖ At least 10 characters
+            </li>
 
-            <!-- Register Button -->
+            <li id="rule-upper" data-text="Contains an uppercase letter" class="flex items-center text-red-400">
+                ✖ Contains an uppercase letter
+            </li>
+
+            <li id="rule-lower" data-text="Contains a lowercase letter" class="flex items-center text-red-400">
+                ✖ Contains a lowercase letter
+            </li>
+
+            <li id="rule-digit" data-text="Contains a number" class="flex items-center text-red-400">
+                ✖ Contains a number
+            </li>
+
+            <li id="rule-special" data-text="Contains a special character" class="flex items-center text-red-400">
+                ✖ Contains a special character
+            </li>
+
+        </ul>
+
+
+        <!-- Confirm Password Field -->
+        <div class="mb-8">
+            <label for="reg-confirm-password" class="block text-sm font-light text-gray-400">Confirm Password</label>
+            <input type="password" id="reg-confirm-password" name="password_confirm" class="form-input">
+        </div>
+
+        <!-- Register Button -->
         <button type="submit"
+                id="register-btn"
                 name="register_form"
                 class="w-full py-2.5 px-4 border border-gray-500 rounded-full text-gray-300 font-medium hover:bg-gray-800 hover:border-gray-700 transition-all duration-200">
             Register
         </button>
     </form>
 
-    </div>
+</div>
 
-    <!-- 4. JavaScript for Tab Toggling -->
-    <script>
+<!-- 4. JavaScript for Tab Toggling -->
+<script>
     const loginTab = document.getElementById('login-tab');
     const registerTab = document.getElementById('register-tab');
     const loginForm = document.getElementById('login-form');
@@ -191,6 +217,66 @@
         loginTab.classList.remove('tab-active');
         loginTab.classList.add('text-gray-500');
     });
+
+    const pwdInput = document.getElementById("reg-password");
+
+    pwdInput.addEventListener("input", validatePasswordRules);
+
+    function validatePasswordRules() { // Validate password
+        const pwd = pwdInput.value;
+
+        updateRule("rule-length", pwd.length >= 10);
+        updateRule("rule-upper", /[A-Z]/.test(pwd));
+        updateRule("rule-lower", /[a-z]/.test(pwd));
+        updateRule("rule-digit", /[0-9]/.test(pwd));
+        updateRule("rule-special", /[^A-Za-z0-9]/.test(pwd));
+    }
+
+    function updateRule(id, isValid) { // Update UI Rule
+        const el = document.getElementById(id);
+
+        // Extract the text after the symbol (remove first 2 chars "✖ " or "✔ ")
+        const text = el.dataset.text;
+
+        if (isValid) {
+            el.classList.remove("text-red-400");
+            el.classList.add("text-green-400");
+            el.innerHTML = "✔ " + text;
+        } else {
+            el.classList.remove("text-green-400");
+            el.classList.add("text-red-400");
+            el.innerHTML = "✖ " + text;
+        }
+    }
+
+    const registerBtn = document.getElementById("register-btn");
+    const confirmInput = document.getElementById("reg-confirm-password");
+
+    function checkFormValidity() { // Check the form validity and change button functionality accordingly
+        // Get all rules
+        const rules = document.querySelectorAll("#password-rules li");
+        let allRulesValid = true;
+
+        rules.forEach(rule => {
+            if (rule.classList.contains("text-red-400")) {
+                allRulesValid = false;
+            }
+        });
+
+        // Check if password and confirm match
+        const passwordsMatch = pwdInput.value && pwdInput.value === confirmInput.value;
+
+        // Enable register button only if all rules are valid AND passwords match
+        registerBtn.disabled = !(allRulesValid && passwordsMatch);
+        registerBtn.classList.toggle("opacity-50", registerBtn.disabled); // optional visual cue
+    }
+
+    // Run validation whenever password or confirm changes
+    pwdInput.addEventListener("input", checkFormValidity);
+    confirmInput.addEventListener("input", checkFormValidity);
+
+    // Initial check
+    checkFormValidity();
 
     /*
       This code runs when the page reloads.

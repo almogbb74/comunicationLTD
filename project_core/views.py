@@ -41,9 +41,6 @@ def auth_page(request):
             if username and User.objects.filter(username=username).exists():
                 errors.append("Username is already taken.")
 
-            if email and User.objects.filter(email=email).exists():
-                errors.append("Email is already registered.")
-
             if password and password != password_confirm:
                 errors.append("Passwords do not match.")
 
@@ -58,13 +55,13 @@ def auth_page(request):
 
             # Only validate password rules if there is a password to check
             if password:
-                password_errors = validate_password_rules(password)
-                errors.extend(password_errors)  # Add all password errors to our list
-
+                is_password_valid = validate_password_rules(password)
+            else:
+                is_password_valid = False
             # VALIDATION ENDS
 
             # Check if any errors occurred
-            if not errors:
+            if not errors and is_password_valid:
                 # No errors found. Create the user.
                 # This uses Django's default hasher (PBKDF2) for now.
                 user = User.objects.create_user(username=username, email=email, password=password)

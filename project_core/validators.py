@@ -33,34 +33,33 @@ def load_password_config():  # Loads the config file
 
 def validate_password_rules(password):  # Check the password according the config file
     config = load_password_config()
-    errors = []
 
     # Check Length
     if len(password) < config['PASSWORD_LENGTH']:
-        errors.append(f"Password must be at least {config['PASSWORD_LENGTH']} characters long.")
+        return False
 
     # Check Uppercase
     if config['REQUIRE_UPPERCASE'] and not re.search(r'[A-Z]', password):
-        errors.append("Password must contain at least one uppercase letter.")
+        return False
 
     # Check Lowercase
     if config['REQUIRE_LOWERCASE'] and not re.search(r'[a-z]', password):
-        errors.append("Password must contain at least one lowercase letter.")
+        return False
 
     # Check Digits
     if config['REQUIRE_DIGITS'] and not re.search(r'\d', password):
-        errors.append("Password must contain at least one digit.")
+        return False
 
     # Check Special Chars
     if config['REQUIRE_SPECIAL_CHARS'] and not re.search(r'[\W_]', password):  # \W is "non-word" chars
-        errors.append("Password must contain at least one special character (e.g., @, #, $).")
+        return False
 
     # Check Dictionary Words
     if config['PREVENT_DICTIONARY_WORDS']:
         dictionary_words = get_dictionary_words()
         if password.lower() in dictionary_words:
-            errors.append("Password is too common and cannot be used.")
+            return False
 
     # TODO: Implement Password History check
 
-    return errors
+    return True
