@@ -1,11 +1,14 @@
+import re
+
+from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User  # Django's built-in User model
 from django.contrib import messages  # For showing error/success messages
 from .validators import validate_password_rules  # My password validator
-import re
+from enums.password_validation_enum import PasswordValidationEnum
 
 
-def auth_page(request):
+def auth_page(request) -> HttpResponsePermanentRedirect | HttpResponseRedirect | HttpResponse:
     # This 'context' dictionary will be passed to the template
     # It helps us re-open the 'Register' tab if validation fails
     context = {
@@ -55,15 +58,15 @@ def auth_page(request):
 
             # Only validate password rules if there is a password to check
             if password:
-                is_password_valid = validate_password_rules(password)
+                password_validation = validate_password_rules(password)
             else:
-                is_password_valid = False
+                password_validation = PasswordValidationEnum.PASSWORD_INVALID_DEFAULT
             # VALIDATION ENDS
 
             # Check if any errors occurred
-            if not errors and is_password_valid:
+            if not errors and password_validation == PasswordValidationEnum.PASSWORD_VALID:
                 # No errors found. Create the user.
-                # This uses Django's default hasher (PBKDF2) for now.
+                # This uses Django's default hasher (PBKDF2).
                 user = User.objects.create_user(username=username, email=email, password=password)
                 user.save()
 
