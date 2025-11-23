@@ -1,7 +1,7 @@
 import re
 import time
 
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
@@ -148,4 +148,57 @@ def auth_page(request) -> HttpResponsePermanentRedirect | HttpResponseRedirect |
 
 @login_required(login_url='auth_page')  # Protects this view
 def main_screen_view(request):
-    return render(request, 'main_screen.html')
+    config = load_password_config()
+    password_rules = {
+        'length': config.get('PASSWORD_LENGTH'),
+        'uppercase': config.get('REQUIRE_UPPERCASE'),
+        'lowercase': config.get('REQUIRE_LOWERCASE'),
+        'digit': config.get('REQUIRE_DIGITS'),
+        'special': config.get('REQUIRE_SPECIAL_CHARS')
+    }
+
+    # Send the rules to the template
+    context = {
+        'password_rules': password_rules
+    }
+    return render(request, 'main_screen.html', context)
+
+
+@login_required(login_url='auth_page')
+def change_password_view(request):
+    if request.method == 'POST':
+        old_password = request.POST.get('old_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+
+        user = request.user
+
+        # Check if the old password is correct
+        if not user.check_password(old_password):
+            messages.error(request, "Your old password was incorrect.")
+            return redirect('main_screen')
+
+        # Check if new passwords match
+        if new_password != confirm_password:
+            messages.error(request, "New passwords do not match.")
+            return redirect('main_screen')
+
+        # Validate new password complexity (using our existing validator!)
+        password_validation = validate_password_rules(new_password)
+
+        if password_validation != PasswordValidationEnum.PASSWORD_VALID:
+            if password_validation == PasswordValidationEnum.PASSWORD_IS_IN_DICTIONARY:
+                messages.error(request, 'Your new password cannot contain a commonly used word or phrase.')
+        else:
+            # Change the password
+            user.set_password(new_password)
+            user.save()
+
+            # IMPORTANT: Keep the user logged in
+            update_session_auth_hash(request, user)
+
+            messages.success(request, "Your password was successfully updated!")
+            return redirect('main_screen')
+
+    # If someone tries to access this via GET, just redirect them to the dashboard
+    return redirect('main_screen')
