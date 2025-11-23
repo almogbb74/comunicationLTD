@@ -156,7 +156,8 @@
                                         <ul class="criteria-list">
                                             {% if password_rules.length > 0 %}
                                             <li id="crit-length" class="criteria-item text-red-500">
-                                                <span class="criteria-icon">✖</span> At least {{ password_rules.length }} characters
+                                                <span class="criteria-icon">✖</span> At least {{ password_rules.length
+                                                }} characters
                                             </li>
                                             {% endif %}
                                             {% if password_rules.uppercase %}
@@ -199,7 +200,7 @@
                     </div>
                 </div>
                 <div class="bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="submit"
+                    <button id="save-password-btn" type="submit"
                             class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#AD8BE9] text-base font-medium text-white hover:bg-[#7660A0] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
                         Update Password
                     </button>
@@ -216,34 +217,34 @@
 <script>
     // --- Modal Logic ---
     const modal = document.getElementById('passwordModal');
+    const saveBtn = document.getElementById('save-password-btn');
+    const oldPwd = document.getElementById('old_password');
+    const newPwd = document.getElementById('new_password');
+    const confirmPwd = document.getElementById('confirm_password');
+    const criteriaBox = document.getElementById('password-criteria');
 
     function openModal() {
         modal.classList.remove('hidden');
-        document.getElementById('password-criteria').classList.remove('hidden');
+        criteriaBox.classList.remove('hidden');
+        checkModalFormValidity();
     }
 
     function closeModal() {
         modal.classList.add('hidden');
-        document.getElementById('old_password').value = '';
-        document.getElementById('new_password').value = '';
-        document.getElementById('confirm_password').value = '';
-
-        // Hide criteria when closing
-        document.getElementById('password-criteria').classList.add('hidden');
+        oldPwd.value = '';
+        newPwd.value = '';
+        confirmPwd.value = '';
+        criteriaBox.classList.add('hidden');
+        checkModalFormValidity();
     }
 
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') closeModal();
     });
 
-    // --- Real-time validation (same style as register page) ---
+    // --- Real-time validation ---
     document.addEventListener('DOMContentLoaded', () => {
-        const newPwd = document.getElementById('new_password');
-        const confirmPwd = document.getElementById('confirm_password');
-        const criteriaBox = document.getElementById('password-criteria');
-        const saveBtn = document.getElementById('save-password-btn');  // your modal's submit button
-
-        // Django rules (safe)
+        // Django password rules (safe)
         const rules = {
             length: {{ password_rules.length|default:"0" }},
             uppercase: {{ password_rules.uppercase|yesno:"true,false" }},
@@ -257,8 +258,6 @@
             if (!el) return;
 
             const icon = el.querySelector(".criteria-icon");
-            const text = el.dataset.text;
-
             if (isValid) {
                 el.classList.remove("text-red-500");
                 el.classList.add("text-green-500");
@@ -280,34 +279,42 @@
             if (rules.special) updateRule("crit-special", /[\W_]/.test(pwd));
 
             updateRule("crit-match", pwd && pwd === confirmPwd.value);
+
             checkModalFormValidity();
         }
 
         function checkModalFormValidity() {
             let allValid = true;
 
-            // collect only visible rules
+            // check visible criteria
             const listItems = document.querySelectorAll("#password-criteria li:not(.hidden)");
-
             listItems.forEach(rule => {
-                if (rule.classList.contains("text-red-500")) {
-                    allValid = false;
-                }
+                if (rule.classList.contains("text-red-500")) allValid = false;
             });
 
-            saveBtn.disabled = !allValid;
-            saveBtn.classList.toggle("opacity-50", saveBtn.disabled);
+            // check all fields are non-empty
+            const fieldsFilled = oldPwd.value.trim() !== '' &&
+                                 newPwd.value.trim() !== '' &&
+                                 confirmPwd.value.trim() !== '';
+
+            const enableBtn = allValid && fieldsFilled;
+
+            saveBtn.disabled = !enableBtn;
+            saveBtn.classList.toggle("opacity-50", !enableBtn);
         }
 
-        // Show criteria on focus like register page
+        // Show criteria when focusing inputs
         newPwd.addEventListener('focus', () => criteriaBox.classList.remove('hidden'));
         confirmPwd.addEventListener('focus', () => criteriaBox.classList.remove('hidden'));
+        oldPwd.addEventListener('focus', () => criteriaBox.classList.remove('hidden'));
 
-        // Real-time validation identical to register page
+        // Real-time validation on input
+        oldPwd.addEventListener('input', checkModalFormValidity);
         newPwd.addEventListener("input", validatePasswordRules);
         confirmPwd.addEventListener("input", validatePasswordRules);
 
-        validatePasswordRules(); // initialize
+        // Initialize button state
+        checkModalFormValidity();
     });
 </script>
 

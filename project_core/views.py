@@ -7,6 +7,8 @@ from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect, Htt
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User  # Django's built-in User model
 from django.contrib import messages  # For showing error/success messages
+from django.contrib.auth.hashers import check_password
+from project_core.models import PreviousPassword
 from .validators import validate_password_rules, load_password_config  # My password validator
 from enums.password_validation_enum import PasswordValidationEnum
 
@@ -175,39 +177,54 @@ def main_screen_view(request):
 
 @login_required(login_url='auth_page')
 def change_password_view(request):
-    if request.method == 'POST':
-        old_password = request.POST.get('old_password')
-        new_password = request.POST.get('new_password')
-        confirm_password = request.POST.get('confirm_password')
+    config = load_password_config()
+    history_count = config.get('PASSWORD_HISTORY_COUNT', 3)  # default to 3
 
-        user = request.user
+    if request.method != 'POST':
+        return redirect('main_screen')
 
-        # Check if the old password is correct
-        if not user.check_password(old_password):
-            messages.error(request, "Your old password was incorrect.")
+    old_password = request.POST.get('old_password')
+    new_password = request.POST.get('new_password')
+    confirm_password = request.POST.get('confirm_password')
+    user: User = request.user
+
+    # Check old password
+    if not user.check_password(old_password):  # type: ignore
+        messages.error(request, "Your old password was incorrect.")
+        return redirect('main_screen')
+
+    # Check new passwords match
+    if new_password != confirm_password:
+        messages.error(request, "New passwords do not match.")
+        return redirect('main_screen')
+
+    # Validate password complexity
+    password_validation = validate_password_rules(new_password)
+    if password_validation != PasswordValidationEnum.PASSWORD_VALID:
+        if password_validation == PasswordValidationEnum.PASSWORD_IS_IN_DICTIONARY:
+            messages.error(request, 'Your new password cannot contain a commonly used word or phrase.')
+        return redirect('main_screen')
+
+    # Check last N passwords before creating new entry
+    previous_passwords = list(user.previous_passwords.all().order_by('-created_at'))
+    for prev in previous_passwords[:history_count]:
+        if check_password(new_password, prev.password):
+            messages.error(request, f'You cannot reuse one of your last {history_count} passwords.')
             return redirect('main_screen')
 
-        # Check if new passwords match
-        if new_password != confirm_password:
-            messages.error(request, "New passwords do not match.")
-            return redirect('main_screen')
+    # Save old password to history
+    PreviousPassword.objects.create(user=user, password=user.password)  # type: ignore
 
-        # Validate new password complexity (using our existing validator!)
-        password_validation = validate_password_rules(new_password)
+    # Keep only last N passwords
+    updated_previous_passwords = list(user.previous_passwords.all().order_by('-created_at'))
+    if len(updated_previous_passwords) > history_count:
+        for pw in updated_previous_passwords[history_count:]:
+            pw.delete()
 
-        if password_validation != PasswordValidationEnum.PASSWORD_VALID:
-            if password_validation == PasswordValidationEnum.PASSWORD_IS_IN_DICTIONARY:
-                messages.error(request, 'Your new password cannot contain a commonly used word or phrase.')
-        else:
-            # Change the password
-            user.set_password(new_password)
-            user.save()
+    # Update user password
+    user.set_password(new_password)
+    user.save()
+    update_session_auth_hash(request, user)
 
-            # IMPORTANT: Keep the user logged in
-            update_session_auth_hash(request, user)
-
-            messages.success(request, "Your password was successfully updated!")
-            return redirect('main_screen')
-
-    # If someone tries to access this via GET, just redirect them to the dashboard
+    messages.success(request, "Your password was successfully updated!")
     return redirect('main_screen')
