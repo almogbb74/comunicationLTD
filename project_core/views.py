@@ -16,8 +16,17 @@ MINUTE = 60
 def auth_page(request) -> HttpResponsePermanentRedirect | HttpResponseRedirect | HttpResponse:
     # This 'context' dictionary will be passed to the template
     # It helps us re-open the 'Register' tab if validation fails
+    config = load_password_config()
+    password_rules = {
+        'length': config.get('PASSWORD_LENGTH'),
+        'uppercase': config.get('REQUIRE_UPPERCASE'),
+        'lowercase': config.get('REQUIRE_LOWERCASE'),
+        'digit': config.get('REQUIRE_DIGITS'),
+        'special': config.get('REQUIRE_SPECIAL_CHARS')
+    }
     context = {
-        'show_register': False
+        'show_register': False,
+        'password_rules': password_rules
     }
 
     if request.method == 'POST':
