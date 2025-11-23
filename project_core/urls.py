@@ -1,12 +1,21 @@
 from django.contrib import admin
 from django.urls import path
-from . import views  # <-- This imports your new views.py file
+from django.contrib.auth import views as auth_views
+from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-
-    # This is the important line:
     # It tells Django that when someone visits the main page ('')
-    # it should run the 'auth_page' function from our views.py
+    # it should run the 'auth_page' function from views.py
     path('', views.auth_page, name='auth_page'),
+    path('system/', views.main_screen_view, name='main_screen'),
+
+    # Logout Logic
+    # This uses Django's built-in logout functionality.
+    # 'next_page' tells Django where to redirect after logging out (back to login page).
+    path('logout/', auth_views.LogoutView.as_view(next_page='auth_page'), name='logout'),
+
+    # Password Reset Request
+    # Added for future implementation of the "Forgot Password" feature
+    path('password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset_request'),
 ]

@@ -1,11 +1,16 @@
 import re
+import time
 
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User  # Django's built-in User model
 from django.contrib import messages  # For showing error/success messages
-from .validators import validate_password_rules  # My password validator
+from .validators import validate_password_rules, load_password_config  # My password validator
 from enums.password_validation_enum import PasswordValidationEnum
+
+MINUTE = 60
 
 
 def auth_page(request) -> HttpResponsePermanentRedirect | HttpResponseRedirect | HttpResponse:
@@ -76,12 +81,71 @@ def auth_page(request) -> HttpResponsePermanentRedirect | HttpResponseRedirect |
             else:
                 # Errors were found
                 # Show all validation errors to the user
+                if password_validation == PasswordValidationEnum.PASSWORD_IS_IN_DICTIONARY:  #
+                    errors.append('Your password cannot contain a commonly used word or phrase.')
                 for error in errors:
                     messages.error(request, error)
 
         elif 'login_form' in request.POST:
-            # TODO: Implement login logic here later
-            messages.error(request, 'Login logic is not implemented yet.')
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+
+            config = load_password_config()
+            max_attempts = config.get('LOGIN_ATTEMPTS_MAX')
+            lockout_duration = config.get('LOCKOUT_DURATION_IN_MIN') * MINUTE  # 15 minutes in seconds
+
+            # Check if currently locked out
+            lockout_timestamp = request.session.get('lockout_timestamp')
+
+            if lockout_timestamp:
+                current_time = time.time()
+                if current_time - lockout_timestamp < lockout_duration:
+                    # Still locked! Calculate remaining time.
+                    remaining_seconds = lockout_duration - (current_time - lockout_timestamp)
+                    minutes_left = int(remaining_seconds // MINUTE) + 1
+                    messages.error(request, f'Account locked. Try again in {minutes_left} minutes.')
+                    return render(request, 'authentication_page.html', context)
+                else:
+                    # Time has passed! Reset everything.
+                    request.session['login_attempts'] = 0
+                    request.session['lockout_timestamp'] = None
+
+            # Check attempts count
+            login_attempts = request.session.get('login_attempts', 0)
+
+            # If we are at the limit but don't have a timestamp yet (edge case), set it now
+            if login_attempts >= max_attempts and not lockout_timestamp:
+                request.session['lockout_timestamp'] = time.time()
+                messages.error(request, f'Login is now locked for {lockout_duration / MINUTE} minutes.')
+                return render(request, 'authentication_page.html', context)
+
+            # Attempt Authentication
+            user = authenticate(request, username=username, password=password)
+
+            if user is not None:
+                # SUCCESS - Clear all counters and timers
+                login(request, user)
+                request.session['login_attempts'] = 0
+                request.session['lockout_timestamp'] = None
+                return redirect('main_screen')
+            else:
+                # FAILURE
+                login_attempts += 1
+                request.session['login_attempts'] = login_attempts
+
+                if login_attempts >= max_attempts:
+                    # Just hit the limit! Lock it down.
+                    request.session['lockout_timestamp'] = time.time()
+                    messages.error(request,
+                                   f'Invalid credentials. Login is now locked for {lockout_duration / MINUTE} minutes.')
+                else:
+                    remaining = max_attempts - login_attempts
+                    messages.error(request, f'Invalid credentials. {remaining} attempts remaining.')
 
     # This handles all GET requests (i..e., just loading the page)
     return render(request, 'authentication_page.html', context)
+
+
+@login_required(login_url='auth_page')  # Protects this view
+def main_screen_view(request):
+    return render(request, 'main_screen.html')

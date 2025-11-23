@@ -31,10 +31,12 @@ def load_password_config() -> dict[str, Any]:  # Loads the config file
             "REQUIRE_DIGITS": True,
             "REQUIRE_SPECIAL_CHARS": True,
             "PREVENT_DICTIONARY_WORDS": True,
+            "LOGIN_ATTEMPTS_MAX": 3,
+            "LOCKOUT_DURATION_IN_MIN": 15
         }
 
 
-def validate_password_rules(password) -> PasswordValidationEnum:  # Check the password according the config file
+def validate_password_rules(password: str) -> PasswordValidationEnum:  # Check the password according the config file
     config = load_password_config()
 
     # Check Length
@@ -60,9 +62,12 @@ def validate_password_rules(password) -> PasswordValidationEnum:  # Check the pa
     # Check Dictionary Words
     if config['PREVENT_DICTIONARY_WORDS']:
         dictionary_words = get_dictionary_words()
-        if password.lower() in dictionary_words:
-            return PasswordValidationEnum.PASSWORD_IS_IN_DICTIONARY
-
-    # TODO: Implement Password History check
+        for w in dictionary_words:
+            if w in password.lower():
+                return PasswordValidationEnum.PASSWORD_IS_IN_DICTIONARY
 
     return PasswordValidationEnum.PASSWORD_VALID
+
+
+def validate_password_history(password):
+    pass

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comunication_LTD - System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#111827] text-gray-300 min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="bg-gray-900 border-b border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-xl font-semibold text-[#DCDFF0]">Comunication_LTD</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <!-- Display the logged-in user's username -->
+                    <span class="text-gray-400">Hello, <span class="text-white font-bold">{{ user.username }}</span></span>
+
+                    <!-- Logout Button -->
+                    <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="text-sm text-red-400 hover:text-red-300 transition-colors">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h1 class="text-3xl font-light text-white mb-2">Welcome to the Dashboard</h1>
+            <p class="text-gray-500">Select an action below</p>
+        </div>
+
+        <!-- Action Buttons Container -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+
+            <!-- Change Password Card (Placeholder) -->
+            <div class="bg-gray-800 p-8 rounded-xl border border-gray-700 hover:border-indigo-500 transition-colors group">
+                <div class="mb-4">
+                    <span class="text-2xl">🔒</span>
+                </div>
+                <h3 class="text-xl font-medium text-white mb-2">Change Password</h3>
+                <p class="text-gray-400 mb-6">Update your account security credentials.</p>
+                <button class="w-full py-3 px-4 bg-gray-700 text-gray-300 rounded-lg cursor-not-allowed opacity-70" disabled>
+                    Change Password (Coming Soon)
+                </button>
+            </div>
+
+            <!-- Add User Card (Placeholder) -->
+            <div class="bg-gray-800 p-8 rounded-xl border border-gray-700 hover:border-green-500 transition-colors group">
+                <div class="mb-4">
+                    <span class="text-2xl">👤</span>
+                </div>
+                <h3 class="text-xl font-medium text-white mb-2">Add New Customer</h3>
+                <p class="text-gray-400 mb-6">Register a new customer to the database.</p>
+                <button class="w-full py-3 px-4 bg-gray-700 text-gray-300 rounded-lg cursor-not-allowed opacity-70" disabled>
+                    Add Customer (Coming Soon)
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
