@@ -2,9 +2,12 @@ import json
 import os
 import re
 
-from typing import Set, Any
+from typing import Set, Any, List
+from django.contrib.auth.hashers import check_password
+from django.contrib.auth.models import User
 from enums.password_validation_enum import PasswordValidationEnum
 from django.conf import settings
+from project_core.models import PreviousPassword
 from project_core.secrets import PASSWORD_CONFIG_FILE_NAME, PASSWORD_DICT_FILE_NAME
 
 
@@ -69,5 +72,21 @@ def validate_password_rules(password: str) -> PasswordValidationEnum:  # Check t
     return PasswordValidationEnum.PASSWORD_VALID
 
 
-def validate_password_history(password):
-    pass
+def validate_password_history(user: User, new_password: str, history_count: int) -> PasswordValidationEnum:
+    previous_passwords: List[PreviousPassword] = list(
+        user.previous_passwords.all().order_by('-created_at'))  # Get existing passwords
+
+    for prev in previous_passwords[:history_count]:  # Check password reuse
+        if check_password(new_password, prev.password):
+            return PasswordValidationEnum.PASSWORD_PREVIOUSLY_USED  # Password exists in history
+
+    PreviousPassword.objects.create(user=user, password=user.password)  # Save old current password into history
+
+    updated_previous = list(
+        user.previous_passwords.all().order_by('-created_at'))  # Refresh the list after adding new entry
+
+    if len(updated_previous) > history_count:  # Enforce history count limit (Using for loop in case the policy changes, and we'll have to delete more than one)
+        for pw in updated_previous[history_count:]:
+            pw.delete()  # Remove the oldest passwords beyond history count from db
+
+    return PasswordValidationEnum.PASSWORD_VALID

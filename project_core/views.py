@@ -7,9 +7,7 @@ from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect, Htt
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User  # Django's built-in User model
 from django.contrib import messages  # For showing error/success messages
-from django.contrib.auth.hashers import check_password
-from project_core.models import PreviousPassword
-from .validators import validate_password_rules, load_password_config  # My password validator
+from .validators import validate_password_rules, load_password_config, validate_password_history
 from enums.password_validation_enum import PasswordValidationEnum
 
 MINUTE = 60
@@ -17,7 +15,7 @@ MINUTE = 60
 
 def auth_page(request) -> HttpResponsePermanentRedirect | HttpResponseRedirect | HttpResponse:
     # This 'context' dictionary will be passed to the template
-    # It helps us re-open the 'Register' tab if validation fails
+    # It helps us re-open the 'Register' tab if validation fails, and also provides password rules
     config = load_password_config()
     password_rules = {
         'length': config.get('PASSWORD_LENGTH'),
@@ -92,7 +90,7 @@ def auth_page(request) -> HttpResponsePermanentRedirect | HttpResponseRedirect |
             else:
                 # Errors were found
                 # Show all validation errors to the user
-                if password_validation == PasswordValidationEnum.PASSWORD_IS_IN_DICTIONARY:  #
+                if password_validation == PasswordValidationEnum.PASSWORD_IS_IN_DICTIONARY:
                     errors.append('Your password cannot contain a commonly used word or phrase.')
                 for error in errors:
                     messages.error(request, error)
@@ -177,52 +175,38 @@ def main_screen_view(request):
 
 @login_required(login_url='auth_page')
 def change_password_view(request):
-    config = load_password_config()
-    history_count = config.get('PASSWORD_HISTORY_COUNT', 3)  # default to 3
-
-    if request.method != 'POST':
+    if request.method != 'POST':  # Only process POST requests
         return redirect('main_screen')
 
-    old_password = request.POST.get('old_password')
+    config = load_password_config()
+    history_count = config.get('PASSWORD_HISTORY_COUNT')
+
+    current_password = request.POST.get('old_password')
     new_password = request.POST.get('new_password')
     confirm_password = request.POST.get('confirm_password')
     user: User = request.user
 
-    # Check old password
-    if not user.check_password(old_password):  # type: ignore
+    if not user.check_password(current_password):  # Check if current password is correct
         messages.error(request, "Your old password was incorrect.")
         return redirect('main_screen')
 
-    # Check new passwords match
-    if new_password != confirm_password:
+    if new_password != confirm_password:  # Check new passwords match
         messages.error(request, "New passwords do not match.")
         return redirect('main_screen')
 
-    # Validate password complexity
-    password_validation = validate_password_rules(new_password)
+    password_validation = validate_password_rules(new_password)  # Validate password complexity
     if password_validation != PasswordValidationEnum.PASSWORD_VALID:
         if password_validation == PasswordValidationEnum.PASSWORD_IS_IN_DICTIONARY:
             messages.error(request, 'Your new password cannot contain a commonly used word or phrase.')
         return redirect('main_screen')
 
-    # Check last N passwords before creating new entry
-    previous_passwords = list(user.previous_passwords.all().order_by('-created_at'))
-    for prev in previous_passwords[:history_count]:
-        if check_password(new_password, prev.password):
-            messages.error(request, f'You cannot reuse one of your last {history_count} passwords.')
-            return redirect('main_screen')
+    password_history_validation = validate_password_history(user, new_password, history_count)  # Check password history
 
-    # Save old password to history
-    PreviousPassword.objects.create(user=user, password=user.password)  # type: ignore
+    if password_history_validation == PasswordValidationEnum.PASSWORD_PREVIOUSLY_USED:
+        messages.error(request, f'You cannot reuse one of your last {history_count} passwords.')
+        return redirect('main_screen')
 
-    # Keep only last N passwords
-    updated_previous_passwords = list(user.previous_passwords.all().order_by('-created_at'))
-    if len(updated_previous_passwords) > history_count:
-        for pw in updated_previous_passwords[history_count:]:
-            pw.delete()
-
-    # Update user password
-    user.set_password(new_password)
+    user.set_password(new_password)  # Update user password
     user.save()
     update_session_auth_hash(request, user)
 

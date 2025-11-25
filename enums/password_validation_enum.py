@@ -10,3 +10,4 @@ class PasswordValidationEnum(Enum):
     PASSWORD_NO_SPECIAL_CHARS = auto()
     PASSWORD_IS_IN_DICTIONARY = auto()
     PASSWORD_INVALID_DEFAULT = auto()
+    PASSWORD_PREVIOUSLY_USED = auto()

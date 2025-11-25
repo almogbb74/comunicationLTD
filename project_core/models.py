@@ -9,4 +9,4 @@ class PreviousPassword(models.Model):
     objects = models.Manager()
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['-created_at']  # Orders by most recent first
