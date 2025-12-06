@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 from pathlib import Path
-from project_core.secrets import DATABASE_PASSWORD
+from project_core.secrets import DATABASE_PASSWORD, EMAIL_ADDRESS, EMAIL_PASSWORD, HOST_EMAIL, PORT_EMAIL
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,12 +29,12 @@ ALLOWED_HOSTS = []
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
+EMAIL_HOST = HOST_EMAIL
+EMAIL_PORT = PORT_EMAIL
 EMAIL_USE_TLS = True
 
-EMAIL_HOST_USER = 'communicationltd.system@gmail.com'
-EMAIL_HOST_PASSWORD = 'dhuo sryn wsig uxsa '
+EMAIL_HOST_USER = EMAIL_ADDRESS
+EMAIL_HOST_PASSWORD = EMAIL_PASSWORD
 # Application definition
 
 INSTALLED_APPS = [
