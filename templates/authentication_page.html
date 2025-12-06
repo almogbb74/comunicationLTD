@@ -91,13 +91,13 @@
 
         <!-- Forgot Password Link -->
         <div class="text-right mb-8">
-            <a href="#" class="text-sm hover:underline" style="color: #AD8BE9;">Forgot Password?</a>
+            <a href="{% url 'password_reset_request' %}" class="text-sm hover:underline" style="color: #AD8BE9;">Forgot Password?</a>
         </div>
 
         <!-- Login Button -->
         <button type="submit"
                 name="login_form"
-                class="w-full py-2.5 px-4 border border-gray-500 rounded-full text-gray-300 font-medium hover:bg-gray-800 hover:border-gray-700 transition-all duration-200">
+                class="w-full py-2.5 px-4 border border-gray-500 rounded-full text-white font-medium bg-[#AD8BE9] hover:bg-[#7660A0] hover:border-gray-700 transition-all duration-200">
             Login
         </button>
     </form>
@@ -159,7 +159,7 @@
         <button type="submit"
                 id="register-btn"
                 name="register_form"
-                class="w-full py-2.5 px-4 border border-gray-500 rounded-full text-gray-300 font-medium hover:bg-gray-800 hover:border-gray-700 transition-all duration-200">
+                class="w-full py-2.5 px-4 border border-gray-500 rounded-full text-white font-medium bg-[#AD8BE9] hover:bg-[#7660A0] hover:border-gray-700 transition-all duration-200">
             Register
         </button>
     </form>

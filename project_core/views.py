@@ -1,16 +1,23 @@
 import re
 import time
+import logging
 
 from django.contrib.auth import authenticate, login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
 from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
-from django.contrib.auth.models import User  # Django's built-in User model
-from django.contrib import messages  # For showing error/success messages
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.utils import timezone
+
+from .models import PasswordResetToken
 from .validators import validate_password_rules, load_password_config, validate_password_history
 from enums.password_validation_enum import PasswordValidationEnum
+from django.core.exceptions import ObjectDoesNotExist
 
 MINUTE = 60
+LOGGER = logging.getLogger('communication_ltd')
 
 
 def auth_page(request) -> HttpResponsePermanentRedirect | HttpResponseRedirect | HttpResponse:
@@ -212,3 +219,132 @@ def change_password_view(request):
 
     messages.success(request, "Your password was successfully updated!")
     return redirect('main_screen')
+
+
+def request_password_reset(request):
+    if request.method == 'POST':
+        email = request.POST.get('reset_email')
+        try:  # Check if user exists
+            user = User.objects.get(email=email)
+        except ObjectDoesNotExist:
+            # Security-wise we won't reveal if user exists.
+            # We pretend it worked to prevent user enumeration.
+            # Render Step 2 (Enter Token) as if an email was sent.
+            return render(request, 'password_reset_templates/password_reset_step2.html', {'email': email})
+
+        # Generate and save token
+        plain_token = PasswordResetToken.generate_token()
+
+        # Create or update token for user (invalidate old ones)
+        PasswordResetToken.objects.filter(user=user).delete()
+        reset_token = PasswordResetToken(user=user)
+        reset_token.save_token(plain_token)
+
+        send_mail(
+            subject='Password Reset Token',
+            message=f'Hello {user.username},\n\nYour password reset token is: {plain_token}\n\nUse this token to verify your identity.',
+            from_email='system@comunication_ltd.com',
+            recipient_list=[email],
+            fail_silently=False,
+        )
+        #  Render Step 2 (Enter Token)
+        return render(request, 'password_reset_templates/password_reset_step2.html', {'email': email})
+
+    # If GET request (clicking the link), show the page
+    return render(request, 'password_reset_templates/password_reset_step1.html')
+
+
+def verify_reset_token(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        token = request.POST.get('token')
+        config = load_password_config()
+        password_rules = {
+            'length': config.get('PASSWORD_LENGTH'),
+            'uppercase': config.get('REQUIRE_UPPERCASE'),
+            'lowercase': config.get('REQUIRE_LOWERCASE'),
+            'digit': config.get('REQUIRE_DIGITS'),
+            'special': config.get('REQUIRE_SPECIAL_CHARS')
+        }
+
+        try:
+            user = User.objects.get(email=email)
+            reset_token = PasswordResetToken.objects.get(user=user)
+
+            # Check expiration (15 minutes = 900 seconds)
+            if (timezone.now() - reset_token.created_at).total_seconds() > 900:
+                messages.error(request, "Token expired.")
+                return redirect('auth_page')
+
+            if reset_token.verify(token):
+                # Token valid! Render Step 3 (Set New Password)
+                return render(request, 'password_reset_templates/password_reset_step3.html',
+                              {'email': email, 'token': token, 'password_rules': password_rules})
+            else:
+                messages.error(request, "Invalid token.")
+                return render(request, 'password_reset_templates/password_reset_step2.html', {'email': email})
+
+        except ObjectDoesNotExist:
+            messages.error(request, "Invalid request.")
+            return redirect('auth_page')
+
+    return redirect('auth_page')  # If GET request, redirect to auth page
+
+
+def reset_password_confirm(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        token = request.POST.get('token')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        config = load_password_config()
+        history_count = config.get('PASSWORD_HISTORY_COUNT')
+        password_rules = {
+            'length': config.get('PASSWORD_LENGTH'),
+            'uppercase': config.get('REQUIRE_UPPERCASE'),
+            'lowercase': config.get('REQUIRE_LOWERCASE'),
+            'digit': config.get('REQUIRE_DIGITS'),
+            'special': config.get('REQUIRE_SPECIAL_CHARS')
+        }
+
+        # Re-verify everything for security (stateless check)
+        try:
+            user = User.objects.get(email=email)
+            reset_token = PasswordResetToken.objects.get(user=user)
+
+            if not reset_token.verify(token):
+                messages.error(request, "Invalid token.")
+                return redirect('auth_page')
+
+            password_validation = validate_password_rules(new_password)  # Validate password complexity
+            if password_validation != PasswordValidationEnum.PASSWORD_VALID:
+                if password_validation == PasswordValidationEnum.PASSWORD_IS_IN_DICTIONARY:
+                    messages.error(request, 'Your new password cannot contain a commonly used word or phrase.')
+                return render(request, 'password_reset_templates/password_reset_step3.html',
+                              {'email': email, 'token': token, 'password_rules': password_rules})
+
+            password_history_validation = validate_password_history(user, new_password,
+                                                                    history_count)  # Check password history
+
+            if password_history_validation == PasswordValidationEnum.PASSWORD_PREVIOUSLY_USED:
+                messages.error(request, f'You cannot reuse one of your last {history_count} passwords.')
+                return render(request, 'password_reset_templates/password_reset_step3.html',
+                              {'email': email, 'token': token, 'password_rules': password_rules})
+
+            if new_password != confirm_password:
+                messages.error(request, "Passwords do not match.")
+                return render(request, 'password_reset_templates/password_reset_step3.html',
+                              {'email': email, 'token': token, 'password_rules': password_rules})
+
+            user.set_password(new_password)  # Success! Update password
+            user.save()
+
+            reset_token.delete()  # Invalidate the used token
+            messages.success(request, "Password reset successful! You can now login.")
+            return redirect('auth_page')
+
+        except ObjectDoesNotExist:
+            messages.error(request, "Error resetting password.")
+            return redirect('auth_page')
+
+    return redirect('auth_page')  # If GET request, redirect to auth page

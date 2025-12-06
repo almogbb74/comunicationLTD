@@ -1,10 +1,8 @@
-from django.contrib import admin
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     # It tells Django that when someone visits the main page ('')
     # it should run the 'auth_page' function from views.py
     path('', views.auth_page, name='auth_page'),
@@ -19,6 +17,8 @@ urlpatterns = [
 
     # Password Reset Request
     # Added for future implementation of the "Forgot Password" feature
-    path('password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset_request'),
+    path('password_reset/', views.request_password_reset, name='password_reset_request'),
+    path('verify_token/', views.verify_reset_token, name='password_reset_verify'),
+    path('new_password/', views.reset_password_confirm, name='password_reset_confirm'),
 
 ]

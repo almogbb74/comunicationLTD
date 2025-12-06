@@ -15,29 +15,25 @@
             backdrop-filter: blur(4px);
         }
 
-        /* Styles for the password criteria */
-        .criteria-list {
-            list-style: none;
-            padding: 0;
-            margin-top: 0.5rem;
-            font-size: 0.875rem;
-            color: #9ca3af;
+        /* NEW STYLE FROM REFERENCE: Bottom border inputs */
+        .form-input {
+            background-color: transparent;
+            border: 0;
+            border-bottom: 1px solid #4b5563;
+            width: 100%;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            color: #DCDFF0;
+            transition: border-color 0.2s ease-in-out;
         }
-        .criteria-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.25rem;
-            transition: color 0.2s ease-in-out;
-        }
-        .criteria-icon {
-            margin-right: 0.5rem;
-            font-size: 1rem;
+        .form-input:focus {
+            outline: none;
+            border-bottom-color: #AD8BE9;
         }
     </style>
 </head>
 <body class="bg-[#111827] text-gray-300 min-h-screen relative">
 
-<!-- Navbar -->
 <nav class="bg-gray-900 border-b border-[#AD8BE9]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
@@ -45,10 +41,7 @@
                 <span class="text-xl font-semibold text-[#DCDFF0]">Comunication_LTD</span>
             </div>
             <div class="flex items-center gap-4">
-                <!-- Display the logged-in user's username -->
                 <span class="text-gray-400">Hello, <span class="text-white font-bold" style="color: #DCDFF0">{{ user.username }}</span></span>
-
-                <!-- Logout Button -->
                 <form action="{% url 'logout' %}" method="post">
                     {% csrf_token %}
                     <button type="submit" class="text-sm text-red-400 hover:text-red-300 transition-colors">
@@ -60,7 +53,6 @@
     </div>
 </nav>
 
-<!-- Messages Area (Success/Error Feedback) -->
 {% if messages %}
 <div class="max-w-4xl mx-auto mt-6 px-4">
     {% for message in messages %}
@@ -71,35 +63,25 @@
 </div>
 {% endif %}
 
-<!-- Main Content -->
 <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
     <div class="text-center mb-12">
         <h1 class="text-3xl font-light text-white mb-2" style="color: #DCDFF0">Welcome to the Dashboard</h1>
         <p class="text-gray-500">Select an action below</p>
     </div>
 
-    <!-- Action Buttons Container -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-
-        <!-- Change Password Card -->
         <div class="bg-gray-800 p-8 rounded-xl border border-gray-700 hover:border-[#AD8BE9] transition-colors group">
-            <div class="mb-4">
-                <span class="text-2xl">🔒</span>
-            </div>
+            <div class="mb-4"><span class="text-2xl">🔒</span></div>
             <h3 class="text-xl font-medium text-white mb-2" style="color: #DCDFF0">Change Password</h3>
             <p class="text-gray-400 mb-6">Update your account security credentials.</p>
-            <!-- Update: Added onclick handler to open modal -->
             <button onclick="openModal()"
                     class="w-full py-3 px-4 bg-[#AD8BE9] hover:bg-[#7660A0] text-white rounded-lg transition-colors font-medium">
                 Change Password
             </button>
         </div>
 
-        <!-- Add User Card (Placeholder) -->
         <div class="bg-gray-800 p-8 rounded-xl border border-gray-700 hover:border-green-500 transition-colors group">
-            <div class="mb-4">
-                <span class="text-2xl">👤</span>
-            </div>
+            <div class="mb-4"><span class="text-2xl">👤</span></div>
             <h3 class="text-xl font-medium text-white mb-2" style="color: #DCDFF0">Add New Customer</h3>
             <p class="text-gray-400 mb-6">Register a new customer to the database.</p>
             <button class="w-full py-3 px-4 bg-gray-700 text-gray-300 rounded-lg cursor-not-allowed opacity-70"
@@ -107,104 +89,95 @@
                 Add Customer (Coming Soon)
             </button>
         </div>
-
     </div>
 </div>
 
-<!-- Change Password Modal (Hidden by default) -->
 <div id="passwordModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog"
      aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
 
-        <!-- Background overlay -->
         <div class="fixed inset-0 modal-overlay transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
 
-        <!-- Modal panel -->
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-700">
+        <div class="inline-block align-bottom bg-[#111827] rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-700 p-6">
 
             <form action="{% url 'change_password' %}" method="POST">
                 {% csrf_token %}
-                <div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                            <h3 class="text-lg leading-6 font-medium text-white mb-4" id="modal-title">
-                                Change Password
-                            </h3>
-                            <div class="mt-2 space-y-4">
 
-                                <!-- Old Password -->
-                                <div>
-                                    <label for="old_password" class="block text-sm font-medium text-gray-400 mb-1">Current
-                                        Password</label>
-                                    <input type="password" name="old_password" id="old_password" required
-                                           class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors">
-                                </div>
+                <h3 class="text-3xl font-light mb-2 text-[#DCDFF0]" id="modal-title">Change Password</h3>
+                <p class="text-gray-400 mb-8 text-sm">Update your current password securely.</p>
 
-                                <!-- New Password -->
-                                <div>
-                                    <label for="new_password" class="block text-sm font-medium text-gray-400 mb-1">New
-                                        Password</label>
-                                    <input type="password" name="new_password" id="new_password" required
-                                           class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors">
-
-                                    <!-- Password Criteria (Hidden by default) -->
-                                    <div id="password-criteria"
-                                         class="hidden mt-2 bg-gray-900 p-3 rounded border border-gray-700">
-                                        <p class="text-xs text-gray-500 mb-2 font-semibold uppercase">Password
-                                            Requirements:</p>
-                                        <ul class="criteria-list">
-                                            {% if password_rules.length > 0 %}
-                                            <li id="crit-length" class="criteria-item text-red-500">
-                                                <span class="criteria-icon">✖</span> At least {{ password_rules.length }} characters
-                                            </li>
-                                            {% endif %}
-                                            {% if password_rules.uppercase %}
-                                            <li id="crit-upper" class="criteria-item text-red-500">
-                                                <span class="criteria-icon">✖</span> At least one uppercase letter
-                                            </li>
-                                            {% endif %}
-                                            {% if password_rules.lowercase %}
-                                            <li id="crit-lower" class="criteria-item text-red-500">
-                                                <span class="criteria-icon">✖</span> At least one lowercase letter
-                                            </li>
-                                            {% endif %}
-                                            {% if password_rules.digit %}
-                                            <li id="crit-digit" class="criteria-item text-red-500">
-                                                <span class="criteria-icon">✖</span> At least one number
-                                            </li>
-                                            {% endif %}
-                                            {% if password_rules.special %}
-                                            <li id="crit-special" class="criteria-item text-red-500">
-                                                <span class="criteria-icon">✖</span> At least one special character
-                                            </li>
-                                            {% endif %}
-                                            <li id="crit-match" class="criteria-item text-red-500">
-                                                <span class="criteria-icon">✖</span> Passwords match
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <!-- Confirm New Password -->
-                                <div>
-                                    <label for="confirm_password" class="block text-sm font-medium text-gray-400 mb-1">Confirm
-                                        New Password</label>
-                                    <input type="password" name="confirm_password" id="confirm_password" required
-                                           class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors">
-                                </div>
-
-                            </div>
-                        </div>
+                <div class="space-y-6">
+                    <div>
+                        <label for="old_password" class="block text-sm font-light text-gray-400">Current
+                            Password</label>
+                        <input type="password" name="old_password" id="old_password" required class="form-input">
                     </div>
+
+                    <div>
+                        <label for="new_password" class="block text-sm font-light text-gray-400">New Password</label>
+                        <input type="password" name="new_password" id="new_password" required class="form-input">
+                    </div>
+                    <div id="password-criteria" class="mb-8">
+                        <ul id="password-rules" class="text-sm space-y-1 mt-6 mb-6">
+                            {% if password_rules.length > 0 %}
+                            <li id="rule-length"
+                                data-text="At least {{ password_rules.length }} characters"
+                                class="flex items-center text-red-400">
+                                ✖ At least {{ password_rules.length }} characters
+                            </li>
+                            {% endif %}
+
+                            {% if password_rules.uppercase %}
+                            <li id="rule-upper"
+                                data-text="Contains an uppercase letter"
+                                class="flex items-center text-red-400">
+                                ✖ Contains an uppercase letter
+                            </li>
+                            {% endif %}
+
+                            {% if password_rules.lowercase %}
+                            <li id="rule-lower"
+                                data-text="Contains a lowercase letter"
+                                class="flex items-center text-red-400">
+                                ✖ Contains a lowercase letter
+                            </li>
+                            {% endif %}
+
+                            {% if password_rules.digit %}
+                            <li id="rule-digit"
+                                data-text="Contains a number"
+                                class="flex items-center text-red-400">
+                                ✖ Contains a number
+                            </li>
+                            {% endif %}
+
+                            {% if password_rules.special %}
+                            <li id="rule-special"
+                                data-text="Contains a special character"
+                                class="flex items-center text-red-400">
+                                ✖ Contains a special character
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <div>
+                        <label for="confirm_password" class="block text-sm font-light text-gray-400">Confirm
+                            Password</label>
+                        <input type="password" name="confirm_password" id="confirm_password" required
+                               class="form-input">
+                    </div>
+
                 </div>
-                <div class="bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+
+                <div class="mt-8 flex flex-col sm:flex-row-reverse gap-3">
                     <button id="save-password-btn" type="submit"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#AD8BE9] text-base font-medium text-white hover:bg-[#7660A0] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            class="w-full sm:w-auto py-2.5 px-4 bg-[#AD8BE9] hover:bg-[#7660A0] text-white rounded-lg transition-colors font-medium opacity-50 cursor-not-allowed"
+                            disabled>
                         Update Password
                     </button>
                     <button type="button" onclick="closeModal()"
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-500 shadow-sm px-4 py-2 bg-gray-800 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            class="w-full sm:w-auto py-2.5 px-4 bg-transparent border border-gray-600 text-gray-300 hover:text-white hover:border-gray-400 rounded-lg transition-colors font-medium">
                         Cancel
                     </button>
                 </div>
@@ -220,12 +193,10 @@
     const oldPwd = document.getElementById('old_password');
     const newPwd = document.getElementById('new_password');
     const confirmPwd = document.getElementById('confirm_password');
-    const criteriaBox = document.getElementById('password-criteria');
 
     function openModal() {
         modal.classList.remove('hidden');
-        criteriaBox.classList.remove('hidden');
-        checkModalFormValidity();
+        validate(); // Run validation immediately on open
     }
 
     function closeModal() {
@@ -233,17 +204,17 @@
         oldPwd.value = '';
         newPwd.value = '';
         confirmPwd.value = '';
-        criteriaBox.classList.add('hidden');
-        checkModalFormValidity();
+        // Reset validation visuals
+        validate();
     }
 
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') closeModal();
     });
 
-    // --- Real-time validation ---
+    // --- Validation Logic (Adapted from Reference) ---
     document.addEventListener('DOMContentLoaded', () => {
-        // Django password rules (safe)
+        // We use Django variables here to ensure logic matches backend
         const rules = {
             length: {{ password_rules.length|default:"0" }},
             uppercase: {{ password_rules.uppercase|yesno:"true,false" }},
@@ -254,69 +225,61 @@
 
         function updateRule(id, isValid) {
             const el = document.getElementById(id);
-            if (!el) return;
+            if (!el) return; // Guard clause in case a rule is disabled in Django
 
-            const icon = el.querySelector(".criteria-icon");
+            const text = el.dataset.text;
+
             if (isValid) {
-                el.classList.remove("text-red-500");
-                el.classList.add("text-green-500");
-                icon.textContent = "✔";
+                el.classList.remove("text-red-400");
+                el.classList.add("text-green-400");
+                el.innerHTML = "✔ " + text;
             } else {
-                el.classList.remove("text-green-500");
-                el.classList.add("text-red-500");
-                icon.textContent = "✖";
+                el.classList.remove("text-green-400");
+                el.classList.add("text-red-400");
+                el.innerHTML = "✖ " + text;
             }
         }
 
-        function validatePasswordRules() {
-            const pwd = newPwd.value;
+        window.validate = function() {
+            const value = newPwd.value;
+            const confirmValue = confirmPwd.value;
+            const oldValue = oldPwd.value;
 
-            if (rules.length > 0) updateRule("crit-length", pwd.length >= rules.length);
-            if (rules.uppercase) updateRule("crit-upper", /[A-Z]/.test(pwd));
-            if (rules.lowercase) updateRule("crit-lower", /[a-z]/.test(pwd));
-            if (rules.digit) updateRule("crit-digit", /\d/.test(pwd));
-            if (rules.special) updateRule("crit-special", /[\W_]/.test(pwd));
+            // Check individual rules
+            const lengthOK  = rules.length === 0 || value.length >= rules.length;
+            const upperOK   = !rules.uppercase || /[A-Z]/.test(value);
+            const lowerOK   = !rules.lowercase || /[a-z]/.test(value);
+            const digitOK   = !rules.digit || /\d/.test(value);
+            const specialOK = !rules.special || /[^A-Za-z0-9]/.test(value);
+            const matchOK   = value === confirmValue && value.length > 0;
 
-            updateRule("crit-match", pwd && pwd === confirmPwd.value);
+            // Update UI
+            if(rules.length > 0) updateRule("rule-length", lengthOK && value.length > 0);
+            if(rules.uppercase) updateRule("rule-upper", upperOK && value.length > 0);
+            if(rules.lowercase) updateRule("rule-lower", lowerOK && value.length > 0);
+            if(rules.digit) updateRule("rule-digit", digitOK && value.length > 0);
+            if(rules.special) updateRule("rule-special", specialOK && value.length > 0);
 
-            checkModalFormValidity();
+            // Button State
+            // Ensure all rules are met AND old password is not empty
+            const allGood =
+                lengthOK && upperOK && lowerOK && digitOK && specialOK &&
+                matchOK &&
+                oldValue.trim() !== "";
+
+            saveBtn.disabled = !allGood;
+            saveBtn.classList.toggle("opacity-50", !allGood);
+            saveBtn.classList.toggle("cursor-not-allowed", !allGood);
         }
 
-        function checkModalFormValidity() {
-            let allValid = true;
+        newPwd.addEventListener('input', validate);
+        confirmPwd.addEventListener('input', validate);
+        oldPwd.addEventListener('input', validate);
 
-            // check visible criteria
-            const listItems = document.querySelectorAll("#password-criteria li:not(.hidden)");
-            listItems.forEach(rule => {
-                if (rule.classList.contains("text-red-500")) allValid = false;
-            });
-
-            // check all fields are non-empty
-            const fieldsFilled = oldPwd.value.trim() !== '' &&
-                                 newPwd.value.trim() !== '' &&
-                                 confirmPwd.value.trim() !== '';
-
-            const enableBtn = allValid && fieldsFilled;
-
-            saveBtn.disabled = !enableBtn;
-            saveBtn.classList.toggle("opacity-50", !enableBtn);
-        }
-
-        // Show criteria when focusing inputs
-        newPwd.addEventListener('focus', () => criteriaBox.classList.remove('hidden'));
-        confirmPwd.addEventListener('focus', () => criteriaBox.classList.remove('hidden'));
-        oldPwd.addEventListener('focus', () => criteriaBox.classList.remove('hidden'));
-
-        // Real-time validation on input
-        oldPwd.addEventListener('input', checkModalFormValidity);
-        newPwd.addEventListener("input", validatePasswordRules);
-        confirmPwd.addEventListener("input", validatePasswordRules);
-
-        // Initialize button state
-        checkModalFormValidity();
+        // Initial run
+        validate();
     });
 </script>
-
 
 </body>
 </html>

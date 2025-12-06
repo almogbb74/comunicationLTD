@@ -27,6 +27,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = 'communicationltd.system@gmail.com'
+EMAIL_HOST_PASSWORD = 'dhuo sryn wsig uxsa '
 # Application definition
 
 INSTALLED_APPS = [
@@ -70,6 +78,23 @@ WSGI_APPLICATION = 'project_core.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'communication_ltd': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+    },
+}
 
 DATABASES = {
     'default': {
