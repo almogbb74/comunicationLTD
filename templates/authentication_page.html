@@ -64,7 +64,7 @@
 
 
     {% if messages %}
-    <div class="mb-6 space-y-2">
+    <div id="django-messages" class="mb-6 space-y-2">
         {% for message in messages %}
         <div class="{% if message.tags == 'error' %}bg-red-800 text-red-100{% else %}bg-green-800 text-green-100{% endif %} p-3 rounded-lg text-sm font-medium">
             {{ message }}
@@ -91,7 +91,8 @@
 
         <!-- Forgot Password Link -->
         <div class="text-right mb-8">
-            <a href="{% url 'password_reset_request' %}" class="text-sm hover:underline" style="color: #AD8BE9;">Forgot Password?</a>
+            <a href="{% url 'password_reset_request' %}" class="text-sm hover:underline" style="color: #AD8BE9;">Forgot
+                Password?</a>
         </div>
 
         <!-- Login Button -->
@@ -171,6 +172,13 @@
     const registerTab = document.getElementById('register-tab');
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
+    const messagesContainer = document.getElementById('django-messages');
+
+    function clearMessages() {
+                if (messagesContainer) {
+                    messagesContainer.style.display = 'none';
+                }
+            }
 
     function switchToLogin() {
         // Show login form, hide register form
@@ -184,6 +192,8 @@
         // REGISTER TAB: Inactive State
         registerTab.classList.remove('tab-active');
         registerTab.classList.add('text-gray-500', 'hover:text-gray-300'); // Add hover effect, so it lights up
+
+        clearMessages();
     }
 
     function switchToRegister() {

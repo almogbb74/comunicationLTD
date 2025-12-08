@@ -18,22 +18,31 @@ from django.core.exceptions import ObjectDoesNotExist
 
 MINUTE = 60
 LOGGER = logging.getLogger('communication_ltd')
+CONFIG = load_password_config()
+PASSWORD_RULES = {
+    'length': CONFIG.get('PASSWORD_LENGTH'),
+    'uppercase': CONFIG.get('REQUIRE_UPPERCASE'),
+    'lowercase': CONFIG.get('REQUIRE_LOWERCASE'),
+    'digit': CONFIG.get('REQUIRE_DIGITS'),
+    'special': CONFIG.get('REQUIRE_SPECIAL_CHARS')
+}
+PASSWORD_ERROR_MESSAGES = {
+    PasswordValidationEnum.PASSWORD_NO_LOWERCASE: "Your new password must contain at least one lowercase letter.",
+    PasswordValidationEnum.PASSWORD_NO_UPPERCASE: "Your new password must contain at least one uppercase letter.",
+    PasswordValidationEnum.PASSWORD_NO_DIGITS: "Your new password must contain at least one digit.",
+    PasswordValidationEnum.PASSWORD_NO_SPECIAL_CHARS: "Your new password must contain at least one special character.",
+    PasswordValidationEnum.PASSWORD_LENGTH_SHORT: f"Your new password must be at least {PASSWORD_RULES['length']} characters long.",
+    PasswordValidationEnum.PASSWORD_IS_IN_DICTIONARY: "Your new password cannot contain a commonly used word or phrase.",
+}
 
 
 def auth_page(request) -> HttpResponsePermanentRedirect | HttpResponseRedirect | HttpResponse:
     # This 'context' dictionary will be passed to the template
     # It helps us re-open the 'Register' tab if validation fails, and also provides password rules
-    config = load_password_config()
-    password_rules = {
-        'length': config.get('PASSWORD_LENGTH'),
-        'uppercase': config.get('REQUIRE_UPPERCASE'),
-        'lowercase': config.get('REQUIRE_LOWERCASE'),
-        'digit': config.get('REQUIRE_DIGITS'),
-        'special': config.get('REQUIRE_SPECIAL_CHARS')
-    }
+
     context = {
         'show_register': False,
-        'password_rules': password_rules
+        'password_rules': PASSWORD_RULES
     }
 
     if request.method == 'POST':
@@ -54,38 +63,37 @@ def auth_page(request) -> HttpResponsePermanentRedirect | HttpResponseRedirect |
             # Check for empty fields FIRST
             if not username:
                 errors.append("Username is required.")
+            else:
+                username = username.strip()
+                if User.objects.filter(username=username).exists():
+                    errors.append("Username is already taken.")
             if not email:
                 errors.append("Email is required.")
-            if not password:
-                errors.append("Password is required.")
-            if not password_confirm:
-                errors.append("Please confirm your password.")
-
-            # Only run other checks if the fields aren't empty
-            if username and User.objects.filter(username=username).exists():
-                errors.append("Username is already taken.")
-
-            if password and password != password_confirm:
-                errors.append("Passwords do not match.")
-
-            if email:
-                # Check email format using a simple regex
+            else:
+                email = email.strip().lower()
                 email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
                 if not re.match(email_regex, email):
                     errors.append("Please enter a valid email address.")
                 # Check if email exists only if the format is valid
                 elif User.objects.filter(email=email).exists():
                     errors.append("Email is already registered.")
-
-            # Only validate password rules if there is a password to check
-            if password:
-                password_validation = validate_password_rules(password)
+            if not password:
+                errors.append("Password is required.")
             else:
-                password_validation = PasswordValidationEnum.PASSWORD_INVALID_DEFAULT
+                password_validation = validate_password_rules(password)
+                if password_validation in PASSWORD_ERROR_MESSAGES:
+                    errors.append(PASSWORD_ERROR_MESSAGES[password_validation])
+
+            if not password_confirm:
+                errors.append("Please confirm your password.")
+
+            if password and password != password_confirm:
+                errors.append("Passwords do not match.")
+
             # VALIDATION ENDS
 
             # Check if any errors occurred
-            if not errors and password_validation == PasswordValidationEnum.PASSWORD_VALID:
+            if not errors:
                 # No errors found. Create the user.
                 # This uses Django's default hasher (PBKDF2).
                 user = User.objects.create_user(username=username, email=email, password=password)
@@ -94,12 +102,8 @@ def auth_page(request) -> HttpResponsePermanentRedirect | HttpResponseRedirect |
                 messages.success(request, 'Registration successful! You can now log in.')
                 return redirect('auth_page')  # Redirect back to the same page
 
-            else:
-                # Errors were found
-                # Show all validation errors to the user
-                if password_validation == PasswordValidationEnum.PASSWORD_IS_IN_DICTIONARY:
-                    errors.append('Your password cannot contain a commonly used word or phrase.')
-                for error in errors:
+            else:  # There were validation errors
+                for error in errors:  # Show all validation errors to the user
                     messages.error(request, error)
 
         elif 'login_form' in request.POST:
@@ -201,10 +205,9 @@ def change_password_view(request):
         messages.error(request, "New passwords do not match.")
         return redirect('main_screen')
 
-    password_validation = validate_password_rules(new_password)  # Validate password complexity
-    if password_validation != PasswordValidationEnum.PASSWORD_VALID:
-        if password_validation == PasswordValidationEnum.PASSWORD_IS_IN_DICTIONARY:
-            messages.error(request, 'Your new password cannot contain a commonly used word or phrase.')
+    password_validation = validate_password_rules(new_password)
+    if password_validation in PASSWORD_ERROR_MESSAGES:
+        messages.error(request, PASSWORD_ERROR_MESSAGES[password_validation])
         return redirect('main_screen')
 
     password_history_validation = validate_password_history(user, new_password, history_count)  # Check password history
@@ -317,9 +320,8 @@ def reset_password_confirm(request):
                 return redirect('auth_page')
 
             password_validation = validate_password_rules(new_password)  # Validate password complexity
-            if password_validation != PasswordValidationEnum.PASSWORD_VALID:
-                if password_validation == PasswordValidationEnum.PASSWORD_IS_IN_DICTIONARY:
-                    messages.error(request, 'Your new password cannot contain a commonly used word or phrase.')
+            if password_validation in PASSWORD_ERROR_MESSAGES:
+                messages.error(request, PASSWORD_ERROR_MESSAGES[password_validation])
                 return render(request, 'password_reset_templates/password_reset_step3.html',
                               {'email': email, 'token': token, 'password_rules': password_rules})
 
