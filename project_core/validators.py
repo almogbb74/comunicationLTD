@@ -33,6 +33,7 @@ def load_password_config() -> dict[str, Any]:  # Loads the config file
             "REQUIRE_LOWERCASE": True,
             "REQUIRE_DIGITS": True,
             "REQUIRE_SPECIAL_CHARS": True,
+            "PASSWORD_HISTORY_COUNT": 3,
             "PREVENT_DICTIONARY_WORDS": True,
             "LOGIN_ATTEMPTS_MAX": 3,
             "LOCKOUT_DURATION_IN_MIN": 15
@@ -73,8 +74,8 @@ def validate_password_rules(password: str) -> PasswordValidationEnum:  # Check t
 
 
 def validate_password_history(user: User, new_password: str, history_count: int) -> PasswordValidationEnum:
-    previous_passwords: List[PreviousPassword] = list(
-        user.previous_passwords.all().order_by('-created_at'))  # Get existing passwords
+    previous_passwords: List[PreviousPassword] = (
+        list(user.previous_passwords.all().order_by('-created_at')))  # Get existing passwords
 
     for prev in previous_passwords[:history_count]:  # Check password reuse
         if check_password(new_password, prev.password):

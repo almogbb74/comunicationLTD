@@ -1,20 +1,19 @@
+import logging
 import re
 import time
-import logging
 
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.core.mail import send_mail
-from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect, HttpResponse
-from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
-from django.contrib import messages
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import send_mail
+from django.shortcuts import render, redirect
 from django.utils import timezone
 
+from enums.password_validation_enum import PasswordValidationEnum
 from .models import PasswordResetToken, Customer
 from .validators import validate_password_rules, load_password_config, validate_password_history
-from enums.password_validation_enum import PasswordValidationEnum
-from django.core.exceptions import ObjectDoesNotExist
 
 MINUTE = 60
 LOGGER = logging.getLogger('communication_ltd')
@@ -36,7 +35,7 @@ PASSWORD_ERROR_MESSAGES = {
 }
 
 
-def auth_page(request) -> HttpResponsePermanentRedirect | HttpResponseRedirect | HttpResponse:
+def auth_page(request):
     # This 'context' dictionary will be passed to the template
     # It helps us re-open the 'Register' tab if validation fails, and also provides password rules
 
