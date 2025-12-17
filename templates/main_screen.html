@@ -244,8 +244,22 @@
                 <tbody>
                 {% for customer in request.user.customers.all %}
                 <tr class="border-b border-gray-800">
+                    <!--
+                      Unsafe Code:
+
+                      <td class="py-2">{{ customer.name|safe }}</td>
+                      <td class="py-2">{{ customer.phone|safe }}</td>
+                    -->
+                    
                     <td class="py-2">{{ customer.name }}</td>
                     <td class="py-2">{{ customer.phone }}</td>
+
+                    <!--
+                      Safe Code:
+
+                      <td class="py-2">{{ customer.name }}</td>
+                      <td class="py-2">{{ customer.phone }}</td>
+                    -->
                     <td class="py-2 text-gray-500">
                         {{ customer.created_at|date:"d/m/Y" }}
                     </td>
