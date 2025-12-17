@@ -14,6 +14,7 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(next_page='auth_page'), name='logout'),
 
     path('change-password/', views.change_password_view, name='change_password'),
+    path('customers-view/', views.customers_view, name='customers_view'),
 
     # Password Reset Request
     # Added for future implementation of the "Forgot Password" feature

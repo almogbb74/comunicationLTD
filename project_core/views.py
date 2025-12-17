@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
 
-from .models import PasswordResetToken
+from .models import PasswordResetToken, Customer
 from .validators import validate_password_rules, load_password_config, validate_password_history
 from enums.password_validation_enum import PasswordValidationEnum
 from django.core.exceptions import ObjectDoesNotExist
@@ -222,6 +222,38 @@ def change_password_view(request):
 
     messages.success(request, "Your password was successfully updated!")
     return redirect('main_screen')
+
+
+@login_required
+def customers_view(request):
+    if request.method == 'POST':
+        ISRAELI_PHONE_REGEX = r'^05\d{8}$'
+        name = request.POST.get('name', '').strip()
+        phone = request.POST.get('phone', '').strip()
+
+        errors = []
+
+        if not name:
+            errors.append("Customer name is required.")
+
+        if not phone:
+            errors.append("Phone number is required.")
+        elif not re.match(ISRAELI_PHONE_REGEX, phone):
+            errors.append("Phone number must be a valid Israeli number (05XXXXXXXX).")
+
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+            return redirect('main_screen')
+
+        Customer.objects.create(
+            user=request.user,
+            name=name,
+            phone=phone
+        )
+
+        messages.success(request, "Customer added successfully.")
+        return redirect('main_screen')
 
 
 def request_password_reset(request):

@@ -6,6 +6,21 @@ import os
 import binascii
 
 
+class Customer(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='customers'
+    )
+    name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=20)
+    created_at = models.DateTimeField(auto_now_add=True)
+    objects = models.Manager()
+
+    def __str__(self):
+        return f"{self.name} ({self.phone})"
+
+
 class PreviousPassword(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='previous_passwords')
     password = models.CharField(max_length=128)
