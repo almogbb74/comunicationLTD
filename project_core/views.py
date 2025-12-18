@@ -10,6 +10,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.shortcuts import render, redirect
 from django.utils import timezone
+from django.db import connection
 
 from enums.password_validation_enum import PasswordValidationEnum
 from .models import PasswordResetToken, Customer
@@ -64,6 +65,23 @@ def auth_page(request):
                 errors.append("Username is required.")
             else:
                 username = username.strip()
+
+                # -------- Vulnerable Code -------
+                # Usage: Enter ' OR '1'='1 in username to exploit
+                # ==========================================================================
+                # sql = f"SELECT id,username FROM auth_user WHERE username = '{username}'"
+                # with connection.cursor() as cursor:
+                #     cursor.execute(sql)
+                #     result = cursor.fetchall()
+                # if result:
+                #     errors.append(f'Username {result} is already taken.')
+                # -------- End of example -------
+
+                # -------- Invulnerable code -------
+                # if User.objects.filter(username=username).exists():
+                #     errors.append("Username is already taken.")
+                # -------- End -------
+
                 if User.objects.filter(username=username).exists():
                     errors.append("Username is already taken.")
             if not email:
@@ -138,6 +156,17 @@ def auth_page(request):
                 messages.error(request, f'Login is now locked for {lockout_duration / MINUTE} minutes.')
                 return render(request, 'authentication_page.html', context)
 
+            # -------- Invulnerable code -------
+            # user = authenticate(request, username=username, password=password)
+            #
+            # if user is not None:
+            #     # SUCCESS - Clear all counters and timers
+            #     login(request, user)
+            #     request.session['login_attempts'] = 0
+            #     request.session['lockout_timestamp'] = None
+            #     return redirect('main_screen')
+            # -------- End -------
+
             # Attempt Authentication
             user = authenticate(request, username=username, password=password)
 
@@ -147,6 +176,32 @@ def auth_page(request):
                 request.session['login_attempts'] = 0
                 request.session['lockout_timestamp'] = None
                 return redirect('main_screen')
+
+            # -------- Vulnerable code -------
+            # Usage: Enter ' OR '1'='1 in password (while username is empty) to exploit
+            # ==========================================================================
+            # username = request.POST.get('username')
+            # password = request.POST.get('password')
+            #
+            # sql = f"""
+            # SELECT id, username
+            # FROM auth_user
+            # WHERE username = '{username}'
+            # AND password = '{password}'
+            # """
+            #
+            # with connection.cursor() as cursor:
+            #     cursor.execute(sql)
+            #     result = cursor.fetchone()
+            #
+            # if result:
+            #     user_id = result[0]
+            #     print('Authenticated user ID:', user_id)
+            #     user = User.objects.get(id=user_id)
+            #     login(request, user)
+            #     return redirect('main_screen')
+            # -------- End -------
+
             else:
                 # FAILURE
                 login_attempts += 1
