@@ -27,12 +27,12 @@ PASSWORD_RULES = {
     'special': CONFIG.get('REQUIRE_SPECIAL_CHARS')
 }
 PASSWORD_ERROR_MESSAGES = {
-    PasswordValidationEnum.PASSWORD_NO_LOWERCASE: "Your new password must contain at least one lowercase letter.",
-    PasswordValidationEnum.PASSWORD_NO_UPPERCASE: "Your new password must contain at least one uppercase letter.",
-    PasswordValidationEnum.PASSWORD_NO_DIGITS: "Your new password must contain at least one digit.",
-    PasswordValidationEnum.PASSWORD_NO_SPECIAL_CHARS: "Your new password must contain at least one special character.",
+    PasswordValidationEnum.PASSWORD_NO_LOWERCASE: 'Your new password must contain at least one lowercase letter.',
+    PasswordValidationEnum.PASSWORD_NO_UPPERCASE: 'Your new password must contain at least one uppercase letter.',
+    PasswordValidationEnum.PASSWORD_NO_DIGITS: 'Your new password must contain at least one digit.',
+    PasswordValidationEnum.PASSWORD_NO_SPECIAL_CHARS: 'Your new password must contain at least one special character.',
     PasswordValidationEnum.PASSWORD_LENGTH_SHORT: f"Your new password must be at least {PASSWORD_RULES['length']} characters long.",
-    PasswordValidationEnum.PASSWORD_IS_IN_DICTIONARY: "Your new password cannot contain a commonly used word or phrase.",
+    PasswordValidationEnum.PASSWORD_IS_IN_DICTIONARY: 'Your new password cannot contain a commonly used word or phrase.',
 }
 
 
@@ -62,7 +62,7 @@ def auth_page(request):
 
             # Check for empty fields FIRST
             if not username:
-                errors.append("Username is required.")
+                errors.append('Username is required.')
             else:
                 username = username.strip()
 
@@ -83,29 +83,29 @@ def auth_page(request):
                 # -------- End -------
 
                 if User.objects.filter(username=username).exists():
-                    errors.append("Username is already taken.")
+                    errors.append(f'Username {username} is already taken.')
             if not email:
-                errors.append("Email is required.")
+                errors.append('Email is required.')
             else:
                 email = email.strip().lower()
                 email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
                 if not re.match(email_regex, email):
-                    errors.append("Please enter a valid email address.")
+                    errors.append('Please enter a valid email address.')
                 # Check if email exists only if the format is valid
                 elif User.objects.filter(email=email).exists():
-                    errors.append("Email is already registered.")
+                    errors.append('Email is already registered.')
             if not password:
-                errors.append("Password is required.")
+                errors.append('Password is required.')
             else:
                 password_validation = validate_password_rules(password)
                 if password_validation in PASSWORD_ERROR_MESSAGES:
                     errors.append(PASSWORD_ERROR_MESSAGES[password_validation])
 
             if not password_confirm:
-                errors.append("Please confirm your password.")
+                errors.append('Please confirm your password.')
 
             if password and password != password_confirm:
-                errors.append("Passwords do not match.")
+                errors.append('Passwords do not match.')
 
             # VALIDATION ENDS
 
@@ -252,11 +252,11 @@ def change_password_view(request):
     user: User = request.user
 
     if not user.check_password(current_password):  # Check if current password is correct
-        messages.error(request, "Your old password was incorrect.")
+        messages.error(request, 'Your old password was incorrect.')
         return redirect('main_screen')
 
     if new_password != confirm_password:  # Check new passwords match
-        messages.error(request, "New passwords do not match.")
+        messages.error(request, 'New passwords do not match.')
         return redirect('main_screen')
 
     password_validation = validate_password_rules(new_password)
@@ -274,7 +274,7 @@ def change_password_view(request):
     user.save()
     update_session_auth_hash(request, user)
 
-    messages.success(request, "Your password was successfully updated!")
+    messages.success(request, 'Your password was successfully updated!')
     return redirect('main_screen')
 
 
@@ -288,26 +288,43 @@ def customers_view(request):
         errors = []
 
         if not name:
-            errors.append("Customer name is required.")
+            errors.append('Customer name is required.')
 
         if not phone:
-            errors.append("Phone number is required.")
+            errors.append('Phone number is required.')
         elif not re.match(ISRAELI_PHONE_REGEX, phone):
-            errors.append("Phone number must be a valid Israeli number (05XXXXXXXX).")
+            errors.append('Phone number must be a valid Israeli number (05XXXXXXXX).')
 
         if errors:
             for e in errors:
                 messages.error(request, e)
             return redirect('main_screen')
 
+        # -------- Vulnerable code -------
+        #
+        # query = f"INSERT INTO project_core_customer (name, phone, created_at) VALUES ('{name}', '{phone}', NOW())"
+        # with connection.cursor() as cursor:
+        #     cursor.execute(query)
+        #
+        # -------- End -------
+
+        # -------- Invulnerable code -------
+        #
+        # Customer.objects.create(
+        #     user=request.user,
+        #     name=name,
+        #     phone=phone
+        # )
+        #
+        # -------- End -------
+
         Customer.objects.create(
             user=request.user,
             name=name,
             phone=phone
         )
-
-        messages.success(request, "Customer added successfully.")
-        return redirect('main_screen')
+        messages.success(request, 'Customer added successfully.')
+    return redirect('main_screen')
 
 
 def request_password_reset(request):
@@ -370,7 +387,7 @@ def verify_reset_token(request):
                 return render(request, 'password_reset_templates/password_reset_step3.html',
                               {'email': email, 'token': token, 'password_rules': password_rules})
             else:
-                messages.error(request, "Invalid token.")
+                messages.error(request, 'Invalid token.')
                 return render(request, 'password_reset_templates/password_reset_step2.html', {'email': email})
 
         except ObjectDoesNotExist:
@@ -420,7 +437,7 @@ def reset_password_confirm(request):
                               {'email': email, 'token': token, 'password_rules': password_rules})
 
             if new_password != confirm_password:
-                messages.error(request, "Passwords do not match.")
+                messages.error(request, 'Passwords do not match.')
                 return render(request, 'password_reset_templates/password_reset_step3.html',
                               {'email': email, 'token': token, 'password_rules': password_rules})
 
@@ -428,11 +445,11 @@ def reset_password_confirm(request):
             user.save()
 
             reset_token.delete()  # Invalidate the used token
-            messages.success(request, "Password reset successful! You can now login.")
+            messages.success(request, 'Password reset successful! You can now login.')
             return redirect('auth_page')
 
         except ObjectDoesNotExist:
-            messages.error(request, "Error resetting password.")
+            messages.error(request, 'Error resetting password.')
             return redirect('auth_page')
 
     return redirect('auth_page')  # If GET request, redirect to auth page
