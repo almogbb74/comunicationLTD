@@ -1,4 +1,3 @@
-import logging
 import re
 import time
 
@@ -17,7 +16,6 @@ from .models import PasswordResetToken, Customer
 from .validators import validate_password_rules, load_password_config, validate_password_history
 
 MINUTE = 60
-LOGGER = logging.getLogger('communication_ltd')
 CONFIG = load_password_config()
 PASSWORD_RULES = {
     'length': CONFIG.get('PASSWORD_LENGTH'),
@@ -60,7 +58,7 @@ def auth_page(request):
             # STARTING VALIDATION HERE
             errors = []
 
-            # Check for empty fields FIRST
+            # Check for empty fields first
             if not username:
                 errors.append('Username is required.')
             else:
@@ -203,7 +201,7 @@ def auth_page(request):
             # -------- End -------
 
             else:
-                # FAILURE
+                # Login failed
                 login_attempts += 1
                 request.session['login_attempts'] = login_attempts
 
