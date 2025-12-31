@@ -10,7 +10,6 @@ from django.core.mail import send_mail
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.db import connection
-
 from enums.password_validation_enum import PasswordValidationEnum
 from .models import PasswordResetToken, Customer
 from .validators import validate_password_rules, load_password_config, validate_password_history
@@ -166,6 +165,7 @@ def auth_page(request):
             # -------- End -------
 
             # Attempt Authentication
+
             user = authenticate(request, username=username, password=password)
 
             if user is not None:
@@ -176,16 +176,13 @@ def auth_page(request):
                 return redirect('main_screen')
 
             # -------- Vulnerable code -------
-            # Usage: Enter ' OR '1'='1 in password (while username is empty) to exploit
+            # Usage: Enter ' OR '1'='1 in username (while password can be whatever) to exploit
             # ==========================================================================
-            # username = request.POST.get('username')
-            # password = request.POST.get('password')
             #
             # sql = f"""
             # SELECT id, username
             # FROM auth_user
             # WHERE username = '{username}'
-            # AND password = '{password}'
             # """
             #
             # with connection.cursor() as cursor:
@@ -279,7 +276,7 @@ def change_password_view(request):
 @login_required
 def customers_view(request):
     if request.method == 'POST':
-        ISRAELI_PHONE_REGEX = r'^05\d{8}$'
+        israeli_phone_regex = r'^05\d{8}$'
         name = request.POST.get('name', '').strip()
         phone = request.POST.get('phone', '').strip()
 
@@ -290,7 +287,7 @@ def customers_view(request):
 
         if not phone:
             errors.append('Phone number is required.')
-        elif not re.match(ISRAELI_PHONE_REGEX, phone):
+        elif not re.match(israeli_phone_regex, phone):
             errors.append('Phone number must be a valid Israeli number (05XXXXXXXX).')
 
         if errors:
