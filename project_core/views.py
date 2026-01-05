@@ -211,11 +211,10 @@ def auth_page(request):
                     remaining = max_attempts - login_attempts
                     messages.error(request, f'Invalid credentials. {remaining} attempts remaining.')
 
-    # This handles all GET requests (i..e., just loading the page)
     return render(request, 'authentication_page.html', context)
 
 
-@login_required(login_url='auth_page')  # Protects this view
+@login_required(login_url='auth_page')  # Protects this view and redirects to login if not authenticated
 def main_screen_view(request):
     config = load_password_config()
     password_rules = {
@@ -233,7 +232,7 @@ def main_screen_view(request):
     return render(request, 'main_screen.html', context)
 
 
-@login_required(login_url='auth_page')
+@login_required(login_url='auth_page')  # Protects this view and redirects to login if not authenticated
 def change_password_view(request):
     if request.method != 'POST':  # Only process POST requests
         return redirect('main_screen')
@@ -273,7 +272,7 @@ def change_password_view(request):
     return redirect('main_screen')
 
 
-@login_required
+@login_required(login_url='auth_page')  # Protects this view and redirects to login if not authenticated
 def customers_view(request):
     if request.method == 'POST':
         israeli_phone_regex = r'^05\d{8}$'
