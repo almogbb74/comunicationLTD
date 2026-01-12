@@ -9,7 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.shortcuts import render, redirect
 from django.utils import timezone
-from django.db import connection
+from django.utils.html import escape
 from enums.password_validation_enum import PasswordValidationEnum
 from .models import PasswordResetToken, Customer
 from .validators import validate_password_rules, load_password_config, validate_password_history
@@ -153,19 +153,6 @@ def auth_page(request):
                 messages.error(request, f'Login is now locked for {lockout_duration / MINUTE} minutes.')
                 return render(request, 'authentication_page.html', context)
 
-            # -------- Invulnerable code -------
-            # user = authenticate(request, username=username, password=password)
-            #
-            # if user is not None:
-            #     # SUCCESS - Clear all counters and timers
-            #     login(request, user)
-            #     request.session['login_attempts'] = 0
-            #     request.session['lockout_timestamp'] = None
-            #     return redirect('main_screen')
-            # -------- End -------
-
-            # Attempt Authentication
-
             user = authenticate(request, username=username, password=password)
 
             if user is not None:
@@ -174,28 +161,6 @@ def auth_page(request):
                 request.session['login_attempts'] = 0
                 request.session['lockout_timestamp'] = None
                 return redirect('main_screen')
-
-            # -------- Vulnerable code -------
-            # Usage: Enter ' OR '1'='1 in username (while password can be whatever) to exploit
-            # ==========================================================================
-            #
-            # sql = f"""
-            # SELECT id, username
-            # FROM auth_user
-            # WHERE username = '{username}'
-            # """
-            #
-            # with connection.cursor() as cursor:
-            #     cursor.execute(sql)
-            #     result = cursor.fetchone()
-            #
-            # if result:
-            #     user_id = result[0]
-            #     print('Authenticated user ID:', user_id)
-            #     user = User.objects.get(id=user_id)
-            #     login(request, user)
-            #     return redirect('main_screen')
-            # -------- End -------
 
             else:
                 # Login failed
@@ -294,28 +259,13 @@ def customers_view(request):
                 messages.error(request, e)
             return redirect('main_screen')
 
-        # -------- Vulnerable code -------
-        #
-        # query = f"INSERT INTO project_core_customer (name, phone, created_at) VALUES ('{name}', '{phone}', NOW())"
-        # with connection.cursor() as cursor:
-        #     cursor.execute(query)
-        #
-        # -------- End -------
-
-        # -------- Invulnerable code -------
-        #
-        # Customer.objects.create(
-        #     user=request.user,
-        #     name=name,
-        #     phone=phone
-        # )
-        #
-        # -------- End -------
+        safe_name = escape(name)
+        safe_phone = escape(phone)
 
         Customer.objects.create(
             user=request.user,
-            name=name,
-            phone=phone
+            name=safe_name,
+            phone=safe_phone
         )
         messages.success(request, 'Customer added successfully.')
     return redirect('main_screen')
