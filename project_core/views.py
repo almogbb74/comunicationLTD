@@ -9,7 +9,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.shortcuts import render, redirect
 from django.utils import timezone
-from django.utils.html import escape
 from enums.password_validation_enum import PasswordValidationEnum
 from .models import PasswordResetToken, Customer
 from .validators import validate_password_rules, load_password_config, validate_password_history
@@ -23,6 +22,7 @@ PASSWORD_RULES = {
     'digit': CONFIG.get('REQUIRE_DIGITS'),
     'special': CONFIG.get('REQUIRE_SPECIAL_CHARS')
 }
+
 PASSWORD_ERROR_MESSAGES = {
     PasswordValidationEnum.PASSWORD_NO_LOWERCASE: 'Your new password must contain at least one lowercase letter.',
     PasswordValidationEnum.PASSWORD_NO_UPPERCASE: 'Your new password must contain at least one uppercase letter.',
@@ -62,23 +62,6 @@ def auth_page(request):
                 errors.append('Username is required.')
             else:
                 username = username.strip()
-
-                # -------- Vulnerable Code -------
-                # Usage: Enter ' OR '1'='1 in username to exploit
-                # ==========================================================================
-                # sql = f"SELECT id,username FROM auth_user WHERE username = '{username}'"
-                # with connection.cursor() as cursor:
-                #     cursor.execute(sql)
-                #     result = cursor.fetchall()
-                # if result:
-                #     errors.append(f'Username {result} is already taken.')
-                # -------- End of example -------
-
-                # -------- Invulnerable code -------
-                # if User.objects.filter(username=username).exists():
-                #     errors.append("Username is already taken.")
-                # -------- End -------
-
                 if User.objects.filter(username=username).exists():
                     errors.append(f'Username {username} is already taken.')
             if not email:
@@ -147,7 +130,7 @@ def auth_page(request):
             # Check attempts count
             login_attempts = request.session.get('login_attempts', 0)
 
-            # If we are at the limit but don't have a timestamp yet (edge case), set it now
+            # To handle cases where the user did more than max attempts and failed but the timestamp is not set yet
             if login_attempts >= max_attempts and not lockout_timestamp:
                 request.session['lockout_timestamp'] = time.time()
                 messages.error(request, f'Login is now locked for {lockout_duration / MINUTE} minutes.')
@@ -243,7 +226,6 @@ def customers_view(request):
         israeli_phone_regex = r'^05\d{8}$'
         name = request.POST.get('name', '').strip()
         phone = request.POST.get('phone', '').strip()
-
         errors = []
 
         if not name:
@@ -259,13 +241,11 @@ def customers_view(request):
                 messages.error(request, e)
             return redirect('main_screen')
 
-        safe_name = escape(name)
-        safe_phone = escape(phone)
 
-        Customer.objects.create(
+        Customer.objects.create( # Django is automatically escaping inputs to prevent XSS at render time
             user=request.user,
-            name=safe_name,
-            phone=safe_phone
+            name=name,
+            phone=phone
         )
         messages.success(request, 'Customer added successfully.')
     return redirect('main_screen')
